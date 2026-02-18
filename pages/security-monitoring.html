@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Monitoring - ExamPro Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo"><i class="fas fa-graduation-cap"></i><span>Exam<span class="logo-accent">Pro</span></span></a>
+            <span class="panel-label">Admin Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-panel.html" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="user-management.html" class="nav-item"><i class="fas fa-users"></i><span>User Management</span></a>
+            <a href="department-management.html" class="nav-item"><i class="fas fa-sitemap"></i><span>Department/Subject</span></a>
+            <a href="system-logs.html" class="nav-item"><i class="fas fa-history"></i><span>System Logs</span></a>
+            <a href="security-monitoring.html" class="nav-item active"><i class="fas fa-shield-alt"></i><span>Security Monitoring</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i><span>Back to Home</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Security Monitoring</h1>
+            <div class="topbar-actions"><span class="user-greeting">Welcome, Admin</span><a href="login.html?role=admin" class="btn btn-login">Login</a></div>
+        </header>
+        <div class="dashboard-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-shield-alt"></i></div><div class="stat-info"><span class="stat-value">OK</span><span class="stat-label">System Status</span></div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><span class="stat-value">2</span><span class="stat-label">Alerts Today</span></div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-user-lock"></i></div><div class="stat-info"><span class="stat-value">0</span><span class="stat-label">Blocked IPs</span></div></div>
+            </div>
+            <div class="content-card">
+                <h2 class="section-title-inline">Security Alerts</h2>
+                <div class="upcoming-list">
+                    <div class="upcoming-item">
+                        <div class="exam-date" style="background: #F59E0B;"><i class="fas fa-exclamation-triangle" style="font-size: 1.2rem;"></i></div>
+                        <div class="exam-details"><h4>Failed login attempt</h4><p>IP: 192.168.1.xxx • 4 hours ago</p></div>
+                        <span class="badge badge-warning">Review</span>
+                    </div>
+                    <div class="upcoming-item">
+                        <div class="exam-date" style="background: var(--success);"><i class="fas fa-check" style="font-size: 1.2rem;"></i></div>
+                        <div class="exam-details"><h4>Password changed successfully</h4><p>User: admin • 6 hours ago</p></div>
+                        <span class="badge badge-success">Resolved</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+    <script src="teacher-panel.js"></script>
+</body>
+</html>

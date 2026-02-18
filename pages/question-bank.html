@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Bank - ExamPro Teacher Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Exam<span class="logo-accent">Pro</span></span>
+            </a>
+            <span class="panel-label">Teacher Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="teacher-panel.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="question-bank.html" class="nav-item active">
+                <i class="fas fa-book"></i>
+                <span>Question Bank</span>
+            </a>
+            <a href="exam-scheduler.html" class="nav-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Exam Scheduler</span>
+            </a>
+            <a href="performance-monitoring.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Performance Monitoring</span>
+            </a>
+            <a href="result-analytics.html" class="nav-item">
+                <i class="fas fa-users-class"></i>
+                <span>Result Analytics</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="../index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Question Bank Management</h1>
+            <div class="topbar-actions">
+                <span class="user-greeting">Welcome, Teacher</span>
+                <a href="login.html?role=teacher" class="btn btn-login">Login</a>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="page-header-actions">
+                <div class="stats-grid" style="margin-bottom: 0;">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">24</span>
+                            <span class="stat-label">Total Questions</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">8</span>
+                            <span class="stat-label">Subjects</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-plus-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">12</span>
+                            <span class="stat-label">Added This Month</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary-action">
+                    <i class="fas fa-plus"></i>
+                    Add New Question
+                </button>
+            </div>
+
+            <div class="content-card">
+                <div class="card-toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search questions...">
+                    </div>
+                    <select class="filter-select">
+                        <option>All Subjects</option>
+                        <option>Mathematics</option>
+                        <option>Programming - C++</option>
+                        <option>Database</option>
+                    </select>
+                </div>
+                <div class="questions-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>Subject</th>
+                                <th>Difficulty</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>What is the capital of India?</td>
+                                <td><span class="badge">General</span></td>
+                                <td><span class="badge badge-easy">Easy</span></td>
+                                <td>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Which keyword is used to define a class in C++?</td>
+                                <td><span class="badge">Programming</span></td>
+                                <td><span class="badge badge-medium">Medium</span></td>
+                                <td>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Solve for x: 2x + 5 = 15</td>
+                                <td><span class="badge">Mathematics</span></td>
+                                <td><span class="badge badge-easy">Easy</span></td>
+                                <td>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>What does SQL stand for?</td>
+                                <td><span class="badge">Database</span></td>
+                                <td><span class="badge badge-easy">Easy</span></td>
+                                <td>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="teacher-panel.js"></script>
+</body>
+
+</html>

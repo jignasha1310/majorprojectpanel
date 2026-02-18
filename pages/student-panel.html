@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Panel - ExamPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="student-panel.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Exam<span class="logo-accent">Pro</span></span>
+            </a>
+            <span class="panel-label">Student Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="student-panel.html" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="student-profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="scheduled-exams.html" class="nav-item">
+                <i class="fas fa-calendar-check"></i>
+                <span>Scheduled Exams</span>
+            </a>
+            <a href="take-exam.html" class="nav-item">
+                <i class="fas fa-pen-fancy"></i>
+                <span>Take Exam</span>
+            </a>
+            <a href="my-results.html" class="nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>My Results</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="../index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Student Dashboard</h1>
+            <div class="topbar-actions">
+                <span class="user-greeting">Welcome, Student</span>
+                <a href="login.html?role=student" class="btn btn-login">Login</a>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="welcome-banner">
+                <div class="welcome-avatar"><i class="fas fa-user-graduate"></i></div>
+                <div class="welcome-info">
+                    <h2>Welcome back, Student!</h2>
+                    <p>Ready to ace your exams? Check your dashboard for the latest updates.</p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">3</span>
+                        <span class="stat-label">Upcoming Exams</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">1</span>
+                        <span class="stat-label">Active Now</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">12</span>
+                        <span class="stat-label">Exams Completed</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">85%</span>
+                        <span class="stat-label">Avg. Score</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2>Quick Actions</h2>
+                <div class="feature-cards">
+                    <a href="student-profile.html" class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3>Secure Login & Profile Management</h3>
+                        <p>Manage your account, update profile, and keep your credentials secure</p>
+                    </a>
+                    <a href="scheduled-exams.html" class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <h3>View Scheduled & Active Exams</h3>
+                        <p>See all your upcoming exams and currently active tests</p>
+                    </a>
+                    <a href="take-exam.html" class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <h3>Real-time MCQ Examination</h3>
+                        <p>Take exams with live timer and auto-submit when time expires</p>
+                    </a>
+                    <a href="my-results.html" class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>Instant Scorecard & Answer Review</h3>
+                        <p>View your scores immediately and review correct answers</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="upcoming-section">
+                <h2>Upcoming Exams</h2>
+                <div class="upcoming-list">
+                    <div class="upcoming-item">
+                        <div class="exam-date">
+                            <span class="day">18</span>
+                            <span class="month">Feb</span>
+                        </div>
+                        <div class="exam-details">
+                            <h4>Mathematics - Unit Test</h4>
+                            <p>BCA Semester 2 • 50 Questions • 60 mins</p>
+                        </div>
+                        <span class="exam-status">Scheduled</span>
+                    </div>
+                    <div class="upcoming-item">
+                        <div class="exam-date">
+                            <span class="day">22</span>
+                            <span class="month">Feb</span>
+                        </div>
+                        <div class="exam-details">
+                            <h4>Programming - C++</h4>
+                            <p>BCA Semester 2 • 30 Questions • 45 mins</p>
+                        </div>
+                        <span class="exam-status exam-status-active">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="teacher-panel.js"></script>
+</body>
+
+</html>

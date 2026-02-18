@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department/Subject Management - ExamPro Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo"><i class="fas fa-graduation-cap"></i><span>Exam<span class="logo-accent">Pro</span></span></a>
+            <span class="panel-label">Admin Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-panel.html" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="user-management.html" class="nav-item"><i class="fas fa-users"></i><span>User Management</span></a>
+            <a href="department-management.html" class="nav-item active"><i class="fas fa-sitemap"></i><span>Department/Subject</span></a>
+            <a href="system-logs.html" class="nav-item"><i class="fas fa-history"></i><span>System Logs</span></a>
+            <a href="security-monitoring.html" class="nav-item"><i class="fas fa-shield-alt"></i><span>Security Monitoring</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i><span>Back to Home</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Department/Subject Management</h1>
+            <div class="topbar-actions"><span class="user-greeting">Welcome, Admin</span><a href="login.html?role=admin" class="btn btn-login">Login</a></div>
+        </header>
+        <div class="dashboard-content">
+            <div class="page-header-actions">
+                <div class="stats-grid" style="margin-bottom: 0;">
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-folder"></i></div><div class="stat-info"><span class="stat-value">6</span><span class="stat-label">Departments</span></div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-book"></i></div><div class="stat-info"><span class="stat-value">24</span><span class="stat-label">Subjects</span></div></div>
+                </div>
+                <button class="btn btn-primary-action"><i class="fas fa-plus"></i> Add Department</button>
+            </div>
+            <div class="content-card">
+                <h2 class="section-title-inline">Departments & Subjects</h2>
+                <div class="class-performance-list">
+                    <div class="class-performance-item">
+                        <div class="class-info"><strong>BCA</strong><span>Bachelor of Computer Applications</span></div>
+                        <div class="class-stats"><div class="mini-stat"><span class="mini-stat-value">8</span><span class="mini-stat-label">Subjects</span></div></div>
+                        <button class="btn-small">Manage</button>
+                    </div>
+                    <div class="class-performance-item">
+                        <div class="class-info"><strong>BBA</strong><span>Bachelor of Business Administration</span></div>
+                        <div class="class-stats"><div class="mini-stat"><span class="mini-stat-value">6</span><span class="mini-stat-label">Subjects</span></div></div>
+                        <button class="btn-small">Manage</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+    <script src="teacher-panel.js"></script>
+</body>
+</html>

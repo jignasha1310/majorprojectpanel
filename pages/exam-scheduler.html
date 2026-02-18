@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Scheduler - ExamPro Teacher Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Exam<span class="logo-accent">Pro</span></span>
+            </a>
+            <span class="panel-label">Teacher Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="teacher-panel.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="question-bank.html" class="nav-item">
+                <i class="fas fa-book"></i>
+                <span>Question Bank</span>
+            </a>
+            <a href="exam-scheduler.html" class="nav-item active">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Exam Scheduler</span>
+            </a>
+            <a href="performance-monitoring.html" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Performance Monitoring</span>
+            </a>
+            <a href="result-analytics.html" class="nav-item">
+                <i class="fas fa-users-class"></i>
+                <span>Result Analytics</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="../index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Exam Scheduler</h1>
+            <div class="topbar-actions">
+                <span class="user-greeting">Welcome, Teacher</span>
+                <a href="login.html?role=teacher" class="btn btn-login">Login</a>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="page-header-actions">
+                <div class="stats-grid" style="margin-bottom: 0;">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">5</span>
+                            <span class="stat-label">Scheduled</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">2</span>
+                            <span class="stat-label">Active Now</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value">18</span>
+                            <span class="stat-label">Completed</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary-action">
+                    <i class="fas fa-plus"></i>
+                    Schedule New Exam
+                </button>
+            </div>
+
+            <div class="content-card">
+                <h2 class="section-title-inline">Upcoming & Active Exams</h2>
+                <div class="upcoming-list">
+                    <div class="upcoming-item">
+                        <div class="exam-date">
+                            <span class="day">18</span>
+                            <span class="month">Feb</span>
+                        </div>
+                        <div class="exam-details">
+                            <h4>Mathematics - Unit Test</h4>
+                            <p>BCA Semester 2 • 50 Questions • 60 mins</p>
+                        </div>
+                        <span class="exam-status">Scheduled</span>
+                        <div class="exam-actions">
+                            <button class="btn-small"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn-small btn-outline-purple"><i class="fas fa-eye"></i> View</button>
+                        </div>
+                    </div>
+                    <div class="upcoming-item">
+                        <div class="exam-date">
+                            <span class="day">22</span>
+                            <span class="month">Feb</span>
+                        </div>
+                        <div class="exam-details">
+                            <h4>Programming - C++</h4>
+                            <p>BCA Semester 2 • 30 Questions • 45 mins</p>
+                        </div>
+                        <span class="exam-status exam-status-active">Active</span>
+                        <div class="exam-actions">
+                            <button class="btn-small"><i class="fas fa-chart-line"></i> Monitor</button>
+                        </div>
+                    </div>
+                    <div class="upcoming-item">
+                        <div class="exam-date">
+                            <span class="day">25</span>
+                            <span class="month">Feb</span>
+                        </div>
+                        <div class="exam-details">
+                            <h4>Database Management</h4>
+                            <p>BCA Semester 3 • 40 Questions • 50 mins</p>
+                        </div>
+                        <span class="exam-status">Scheduled</span>
+                        <div class="exam-actions">
+                            <button class="btn-small"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn-small btn-outline-purple"><i class="fas fa-eye"></i> View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h2 class="section-title-inline">Create New Exam</h2>
+                <form class="exam-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Exam Title</label>
+                            <input type="text" placeholder="e.g. Mathematics - Unit Test">
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select>
+                                <option>Select Subject</option>
+                                <option>Mathematics</option>
+                                <option>Programming - C++</option>
+                                <option>Database</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (minutes)</label>
+                            <input type="number" placeholder="60" min="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Number of Questions</label>
+                            <input type="number" placeholder="50" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Class / Batch</label>
+                            <select>
+                                <option>BCA Semester 2</option>
+                                <option>BCA Semester 3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary-action">
+                        <i class="fas fa-calendar-plus"></i>
+                        Schedule Exam
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="teacher-panel.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamPro - Online Examination System</title>
+    <meta name="description"
+        content="A comprehensive online examination platform for educational institutions. Conduct MCQ exams with automated grading, real-time monitoring, and instant results.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#home" class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Exam<span class="logo-accent">Pro</span></span>
+            </a>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#panels" class="nav-link">Panels</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="nav-buttons" id="nav-buttons">
+                <a href="pages/login.php" class="btn btn-outline">Login</a>
+                <a href="pages/register.php" class="btn btn-primary">Register</a>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-bolt"></i>
+                    <span>Next-Gen Examination Platform</span>
+                </div>
+                <h1 class="hero-title">
+                    Transform Your
+                    <span class="gradient-text">Examination</span>
+                    Experience
+                </h1>
+                <p class="hero-description">
+                    A comprehensive online examination system designed for educational institutions.
+                    Conduct secure MCQ-based exams with real-time monitoring, automated grading,
+                    and instant result analytics.
+                </p>
+                <div class="hero-buttons">
+                    <a href="pages/register.html" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket"></i>
+                        Get Started Free
+                    </a>
+                    <a href="#features" class="btn btn-outline btn-lg">
+                        <i class="fas fa-play-circle"></i>
+                        Learn More
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label">Students</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Teachers</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">50K+</span>
+                        <span class="stat-label">Exams Conducted</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-card">
+                    <div class="card-header">
+                        <div class="card-dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <span class="card-title">Live Exam</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="exam-question">
+                            <span class="q-number">Q1</span>
+                            <p>What is the capital of India?</p>
+                        </div>
+                        <div class="exam-options">
+                            <label class="option">
+                                <input type="radio" name="demo">
+                                <span class="option-text">A. Mumbai</span>
+                            </label>
+                            <label class="option selected">
+                                <input type="radio" name="demo" checked>
+                                <span class="option-text">B. New Delhi</span>
+                            </label>
+                            <label class="option">
+                                <input type="radio" name="demo">
+                                <span class="option-text">C. Kolkata</span>
+                            </label>
+                            <label class="option">
+                                <input type="radio" name="demo">
+                                <span class="option-text">D. Chennai</span>
+                            </label>
+                        </div>
+                        <div class="exam-timer">
+                            <i class="fas fa-clock"></i>
+                            <span>29:45</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave">
+            <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+                    fill="#F8FAFC" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Features</span>
+                <h2 class="section-title">Powerful Features for Modern Exams</h2>
+                <p class="section-description">
+                    Everything you need to conduct seamless online examinations
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Authentication</h3>
+                    <p>Password hashing and session management ensures only authorized users can access the system.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <h3>Automated Timer</h3>
+                    <p>JavaScript-based countdown that auto-submits the paper when time expires. No manual intervention
+                        needed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-random"></i>
+                    </div>
+                    <h3>Randomized Questions</h3>
+                    <p>Prevents cheating by shuffling question order for every student. Fair examination guaranteed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Result Analytics</h3>
+                    <p>Visual representation of scores using charts. Track performance trends and identify weak areas.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h3>No Backtrack Option</h3>
+                    <p>Optional feature that prevents students from going back to previous questions for exam integrity.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Responsive</h3>
+                    <p>Take exams on any device - desktop, tablet, or smartphone. Fully responsive design.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Panels Section -->
+    <section class="panels" id="panels">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">User Panels</span>
+                <h2 class="section-title">Designed for Everyone</h2>
+                <p class="section-description">
+                    Specialized dashboards for Students, Teachers, and Administrators
+                </p>
+            </div>
+            <div class="panels-grid">
+                <!-- Student Panel -->
+                <div class="panel-card student-panel">
+                    <div class="panel-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>Student Panel</h3>
+                    <ul class="panel-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Secure Login & Profile Management</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>View Scheduled & Active Exams</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Real-time MCQ Examination</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Instant Scorecard & Answer Review</span>
+                        </li>
+                    </ul>
+                    <a href="pages/student-panel.php" class="btn btn-panel">
+                        Access Panel
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Teacher Panel -->
+                <div class="panel-card teacher-panel featured">
+                    <div class="panel-badge">Most Used</div>
+                    <div class="panel-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3>Teacher Panel</h3>
+                    <ul class="panel-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Question Bank Management</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Exam Scheduler</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Performance Monitoring</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Class-wise Result Analytics</span>
+                        </li>
+                    </ul>
+                    <a href="pages/teacher/login.php" class="btn btn-panel">
+                        Access Panel
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Admin Panel -->
+                <div class="panel-card admin-panel">
+                    <div class="panel-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Admin Panel</h3>
+                    <ul class="panel-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>User Management (Teachers & Students)</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Department/Subject Management</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>System Logs & Activity Tracking</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Security Monitoring</span>
+                        </li>
+                    </ul>
+                    <a href="pages/admin-panel.html" class="btn btn-panel">
+                        Access Panel
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Process</span>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-description">
+                    Simple 4-step process to conduct online examinations
+                </p>
+            </div>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3>Register</h3>
+                    <p>Create your account as Student, Teacher, or Admin</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h3>Create Exam</h3>
+                    <p>Teachers add questions and schedule exams</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <h3>Take Exam</h3>
+                    <p>Students attempt exam with timer</p>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h3>Get Results</h3>
+                    <p>Instant scorecard and analytics</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-content">
+                    <span class="section-badge">About Us</span>
+                    <h2 class="section-title">Empowering Education Through Technology</h2>
+                    <p class="about-text">
+                        ExamPro is a comprehensive online examination system designed specifically
+                        for educational institutions. Built as a BCA Major Project, it demonstrates
+                        the practical application of web development technologies including HTML,
+                        CSS, and JavaScript.
+                    </p>
+                    <p class="about-text">
+                        Our platform supports multiple user roles - Students, Teachers, and Administrators -
+                        each with dedicated dashboards and functionalities to ensure smooth examination processes.
+                    </p>
+                    <div class="about-features">
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>BCA Major Project</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Modern Web Technologies</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Responsive Design</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>User-Friendly Interface</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="about-card">
+                        <div class="about-stats-grid">
+                            <div class="about-stat">
+                                <i class="fas fa-university"></i>
+                                <span class="about-stat-number">3</span>
+                                <span class="about-stat-label">User Panels</span>
+                            </div>
+                            <div class="about-stat">
+                                <i class="fas fa-cogs"></i>
+                                <span class="about-stat-number">6+</span>
+                                <span class="about-stat-label">Key Features</span>
+                            </div>
+                            <div class="about-stat">
+                                <i class="fas fa-code"></i>
+                                <span class="about-stat-number">HTML/CSS/JS</span>
+                                <span class="about-stat-label">Technologies</span>
+                            </div>
+                            <div class="about-stat">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span class="about-stat-number">100%</span>
+                                <span class="about-stat-label">Responsive</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Contact</span>
+                <h2 class="section-title">Get In Touch</h2>
+                <p class="section-description">
+                    Have questions? We'd love to hear from you
+                </p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Address</h4>
+                            <p>BCA Department, University Campus</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <p>exampro@university.edu</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Phone</h4>
+                            <p>+91 98765 43210</p>
+                        </div>
+                    </div>
+                </div>
+                <form class="contact-form" id="contact-form">
+                    <div class="form-group">
+                        <input type="text" id="name" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="subject" placeholder="Subject">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" rows="5" placeholder="Your Message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#home" class="logo">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Exam<span class="logo-accent">Pro</span></span>
+                    </a>
+                    <p>A comprehensive online examination system for modern educational institutions.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#panels">Panels</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Panels</h4>
+                    <ul>
+                        <li><a href="pages/login.html?role=student">Student Login</a></li>
+                        <li><a href="pages/login.html?role=teacher">Teacher Login</a></li>
+                        <li><a href="pages/login.html?role=admin">Admin Login</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#contact">Contact Us</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 ExamPro. All rights reserved. | BCA Major Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

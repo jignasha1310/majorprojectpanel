@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Exam - ExamPro Student Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo"><i class="fas fa-graduation-cap"></i><span>Exam<span class="logo-accent">Pro</span></span></a>
+            <span class="panel-label">Student Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="student-panel.html" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="student-profile.html" class="nav-item"><i class="fas fa-user"></i><span>My Profile</span></a>
+            <a href="scheduled-exams.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Scheduled Exams</span></a>
+            <a href="take-exam.html" class="nav-item active"><i class="fas fa-pen-fancy"></i><span>Take Exam</span></a>
+            <a href="my-results.html" class="nav-item"><i class="fas fa-trophy"></i><span>My Results</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i><span>Back to Home</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <h1>Real-time MCQ Examination</h1>
+            <div class="topbar-actions"><span class="user-greeting">Welcome, Student</span><a href="login.html?role=student" class="btn btn-login">Login</a></div>
+        </header>
+        <div class="dashboard-content">
+            <div class="content-card">
+                <h2 class="section-title-inline">Active Exams - Ready to Take</h2>
+                <div class="upcoming-list">
+                    <div class="upcoming-item">
+                        <div class="exam-date"><span class="day">22</span><span class="month">Feb</span></div>
+                        <div class="exam-details"><h4>Programming - C++</h4><p>30 Questions • 45 mins • MCQ</p></div>
+                        <span class="exam-status exam-status-active">Active</span>
+                        <a href="#" class="btn btn-primary-action"><i class="fas fa-play"></i> Start Exam</a>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; color: var(--text-muted);">Login to access your assigned exams. The timer starts when you begin.</p>
+            </div>
+        </div>
+    </main>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+    <script src="teacher-panel.js"></script>
+</body>
+</html>

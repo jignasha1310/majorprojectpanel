@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - ExamPro Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="teacher-panel.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html" class="logo"><i class="fas fa-graduation-cap"></i><span>Exam<span class="logo-accent">Pro</span></span></a>
+            <span class="panel-label">Admin Panel</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-panel.html" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="user-management.html" class="nav-item"><i class="fas fa-users"></i><span>User Management</span></a>
+            <a href="department-management.html" class="nav-item"><i class="fas fa-sitemap"></i><span>Department/Subject</span></a>
+            <a href="system-logs.html" class="nav-item active"><i class="fas fa-history"></i><span>System Logs</span></a>
+            <a href="security-monitoring.html" class="nav-item"><i class="fas fa-shield-alt"></i><span>Security Monitoring</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="../index.html" class="back-link"><i class="fas fa-arrow-left"></i><span>Back to Home</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <h1>System Logs & Activity Tracking</h1>
+            <div class="topbar-actions"><span class="user-greeting">Welcome, Admin</span><a href="login.html?role=admin" class="btn btn-login">Login</a></div>
+        </header>
+        <div class="dashboard-content">
+            <div class="content-card">
+                <div class="card-toolbar">
+                    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search logs..."></div>
+                    <select class="filter-select"><option>All Activity</option><option>Login</option><option>Exam</option></select>
+                </div>
+                <div class="questions-table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Time</th><th>User</th><th>Activity</th><th>IP Address</th></tr></thead>
+                        <tbody>
+                            <tr><td>10:45 AM</td><td>Rahul Kumar</td><td>Exam submitted - Programming C++</td><td>192.168.1.5</td></tr>
+                            <tr><td>10:30 AM</td><td>Dr. Priya Sharma</td><td>Logged in</td><td>192.168.1.2</td></tr>
+                            <tr><td>09:15 AM</td><td>Admin</td><td>New teacher added</td><td>192.168.1.1</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+    <script src="teacher-panel.js"></script>
+</body>
+</html>
