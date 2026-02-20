@@ -15,8 +15,43 @@ CREATE TABLE IF NOT EXISTS students (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Extended student profile/registration data
+CREATE TABLE IF NOT EXISTS student_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL UNIQUE,
+    first_name VARCHAR(60) NOT NULL,
+    last_name VARCHAR(60) NOT NULL,
+    dob DATE NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    address TEXT NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(12) NOT NULL,
+    mobile_country_code VARCHAR(8) NOT NULL,
+    mobile_number VARCHAR(20) NOT NULL,
+    photo_path VARCHAR(255) NOT NULL,
+    signature_path VARCHAR(255) NOT NULL,
+    branch VARCHAR(100) NOT NULL,
+    course_program VARCHAR(120) NOT NULL,
+    current_semester VARCHAR(40) NOT NULL,
+    selected_subjects TEXT NOT NULL,
+    exam_medium VARCHAR(40) NOT NULL,
+    marksheet_path VARCHAR(255) DEFAULT NULL,
+    terms_accepted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
 -- Teachers table
 CREATE TABLE IF NOT EXISTS teachers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Admins table
+CREATE TABLE IF NOT EXISTS admins (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(120) NOT NULL UNIQUE,
@@ -88,6 +123,10 @@ INSERT INTO students (name, email, roll_number, department, password) VALUES
 -- Default teacher login (password: teacher123)
 INSERT INTO teachers (name, email, password) VALUES
 ('Default Teacher', 'teacher@exampro.com', '$2y$10$tLg3ve.46FC5bbhiCM5TWe5DqaBHydQneJjf6zVqZBlvPB0f69Jpu');
+
+-- Default admin login (password: admin123)
+INSERT INTO admins (name, email, password) VALUES
+('Default Admin', 'admin@exampro.com', '$2y$10$EVXBMePlOUidA6OCtD23E.XoVLOjCKuj9LCIX5yfavAnBry.y.6I2');
 
 -- Sample exams
 INSERT INTO exams (teacher_id, title, subject, semester, total_questions, duration_minutes, status, is_active, exam_date) VALUES

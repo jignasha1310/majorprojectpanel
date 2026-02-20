@@ -31,7 +31,26 @@
                 <li><a href="#contact" class="nav-link">Contact</a></li>
             </ul>
             <div class="nav-buttons" id="nav-buttons">
-                <a href="pages/login.php" class="btn btn-outline">Login</a>
+                <div class="login-dropdown" id="loginDropdown">
+                    <button class="btn btn-outline login-dropdown-toggle" id="loginDropdownToggle" type="button" aria-expanded="false" aria-haspopup="true">
+                        Login <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="login-dropdown-menu" id="loginDropdownMenu">
+                        <div class="login-search-wrap">
+                            <input type="text" id="loginSearchInput" class="login-search-input" placeholder="Search login panel...">
+                        </div>
+                        <a href="pages/login.php" class="login-option" data-label="student login">
+                            <i class="fas fa-user-graduate"></i> Student Login
+                        </a>
+                        <a href="pages/teacher/login.php" class="login-option" data-label="teacher login">
+                            <i class="fas fa-chalkboard-teacher"></i> Teacher Login
+                        </a>
+                        <a href="pages/admin/login.php" class="login-option" data-label="admin login">
+                            <i class="fas fa-user-shield"></i> Admin Login
+                        </a>
+                        <div class="login-no-results" id="loginNoResults" hidden>No login panel found</div>
+                    </div>
+                </div>
                 <a href="pages/register.php" class="btn btn-primary">Register</a>
             </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu">
@@ -61,7 +80,7 @@
                     and instant result analytics.
                 </p>
                 <div class="hero-buttons">
-                    <a href="pages/register.html" class="btn btn-primary btn-lg">
+                    <a href="pages/register.php" class="btn btn-primary btn-lg">
                         <i class="fas fa-rocket"></i>
                         Get Started Free
                     </a>
@@ -291,7 +310,7 @@
                             <span>Security Monitoring</span>
                         </li>
                     </ul>
-                    <a href="pages/admin-panel.html" class="btn btn-panel">
+                    <a href="pages/admin/login.php" class="btn btn-panel">
                         Access Panel
                         <i class="fas fa-arrow-right"></i>
                     </a>
@@ -507,9 +526,9 @@
                 <div class="footer-links">
                     <h4>Panels</h4>
                     <ul>
-                        <li><a href="pages/login.html?role=student">Student Login</a></li>
-                        <li><a href="pages/login.html?role=teacher">Teacher Login</a></li>
-                        <li><a href="pages/login.html?role=admin">Admin Login</a></li>
+                        <li><a href="pages/login.php">Student Login</a></li>
+                        <li><a href="pages/teacher/login.php">Teacher Login</a></li>
+                        <li><a href="pages/admin/login.php">Admin Login</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">

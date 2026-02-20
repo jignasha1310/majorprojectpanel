@@ -199,6 +199,81 @@ img {
     gap: 1rem;
 }
 
+.login-dropdown {
+    position: relative;
+}
+
+.login-dropdown-toggle i {
+    font-size: 0.8rem;
+}
+
+.login-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 260px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid #e2e8f0;
+    display: none;
+    padding: 0.5rem;
+    z-index: 1100;
+}
+
+.login-search-wrap {
+    margin-bottom: 0.45rem;
+}
+
+.login-search-input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-primary);
+    background: #f8fafc;
+}
+
+.login-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: white;
+}
+
+.login-dropdown-menu .login-option {
+    display: block;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.login-dropdown-menu .login-option i {
+    width: 18px;
+    margin-right: 0.35rem;
+    color: #8b5cf6;
+}
+
+.login-dropdown-menu .login-option:hover {
+    background: #eef2ff;
+    color: var(--primary);
+}
+
+.login-no-results {
+    margin-top: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.login-dropdown.open .login-dropdown-menu {
+    display: block;
+}
+
 .hamburger {
     display: none;
     flex-direction: column;
@@ -1003,6 +1078,27 @@ img {
         width: 100%;
         justify-content: center;
         min-height: 48px;
+    }
+
+    .login-dropdown {
+        width: 100%;
+    }
+
+    .login-dropdown .btn {
+        width: 100%;
+    }
+
+    .login-dropdown-menu {
+        position: static;
+        display: none;
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+        margin-top: 0.6rem;
+        width: 100%;
+    }
+
+    .login-dropdown.open .login-dropdown-menu {
+        display: block;
     }
 
     .hero-container {

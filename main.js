@@ -13,11 +13,20 @@ window.addEventListener('scroll', () => {
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 const navButtons = document.getElementById('nav-buttons');
+const loginDropdown = document.querySelector('.login-dropdown');
+const loginDropdownToggle = document.querySelector('.login-dropdown-toggle');
+const loginSearchInput = document.querySelector('.login-search-input');
+const loginOptions = document.querySelectorAll('.login-option');
+const loginNoResults = document.querySelector('.login-no-results');
 
 hamburger.addEventListener('click', () => {
     navMenu.classList.toggle('active');
     navButtons.classList.toggle('active');
     hamburger.classList.toggle('active');
+    if (!navButtons.classList.contains('active') && loginDropdown) {
+        loginDropdown.classList.remove('open');
+        if (loginDropdownToggle) loginDropdownToggle.setAttribute('aria-expanded', 'false');
+    }
 });
 
 // Close menu when clicking a nav link
@@ -28,6 +37,74 @@ document.querySelectorAll('.nav-link').forEach(link => {
         hamburger.classList.remove('active');
     });
 });
+
+if (loginDropdown && loginDropdownToggle) {
+    const filterLoginOptions = () => {
+        if (!loginSearchInput) return;
+        const query = loginSearchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        loginOptions.forEach((option) => {
+            const label = option.getAttribute('data-label') || option.textContent.toLowerCase();
+            const matches = label.includes(query);
+            option.style.display = matches ? 'block' : 'none';
+            if (matches) visibleCount += 1;
+        });
+
+        if (loginNoResults) {
+            loginNoResults.hidden = visibleCount !== 0;
+        }
+    };
+
+    const resetLoginFilter = () => {
+        if (loginSearchInput) {
+            loginSearchInput.value = '';
+        }
+        loginOptions.forEach((option) => {
+            option.style.display = 'block';
+        });
+        if (loginNoResults) {
+            loginNoResults.hidden = true;
+        }
+    };
+
+    loginDropdownToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = loginDropdown.classList.toggle('open');
+        loginDropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (isOpen) {
+            resetLoginFilter();
+            if (loginSearchInput) loginSearchInput.focus();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!loginDropdown.contains(e.target)) {
+            loginDropdown.classList.remove('open');
+            loginDropdownToggle.setAttribute('aria-expanded', 'false');
+            resetLoginFilter();
+        }
+    });
+
+    loginDropdown.querySelectorAll('.login-dropdown-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            loginDropdown.classList.remove('open');
+            loginDropdownToggle.setAttribute('aria-expanded', 'false');
+            resetLoginFilter();
+        });
+    });
+
+    if (loginSearchInput) {
+        loginSearchInput.addEventListener('input', filterLoginOptions);
+        loginSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                loginDropdown.classList.remove('open');
+                loginDropdownToggle.setAttribute('aria-expanded', 'false');
+                resetLoginFilter();
+            }
+        });
+    }
+}
 
 // ===== ACTIVE NAV LINK ON SCROLL =====
 const sections = document.querySelectorAll('section[id]');
