@@ -4,37 +4,84 @@ require_once '../config/db.php';
 $error = '';
 $success = '';
 
+$roleConfig = [
+    'student' => [
+        'table' => 'students',
+        'id_session' => 'student_id',
+        'name_session' => 'student_name',
+        'email_session' => null,
+        'redirect' => 'student-panel.php',
+    ],
+    'teacher' => [
+        'table' => 'teachers',
+        'id_session' => 'teacher_id',
+        'name_session' => 'teacher_name',
+        'email_session' => 'teacher_email',
+        'redirect' => 'teacher/dashboard.php',
+    ],
+    'admin' => [
+        'table' => 'admins',
+        'id_session' => 'admin_id',
+        'name_session' => 'admin_name',
+        'email_session' => 'admin_email',
+        'redirect' => 'admin/dashboard.php',
+    ],
+];
+
 if (isset($_SESSION['student_id'])) {
     header('Location: student-panel.php');
     exit;
 }
 
+if (isset($_SESSION['teacher_id'])) {
+    header('Location: teacher/dashboard.php');
+    exit;
+}
+
+if (isset($_SESSION['admin_id'])) {
+    header('Location: admin/dashboard.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $role = strtolower(trim($_POST['role'] ?? ''));
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if (empty($email) || empty($password)) {
+    if (empty($role)) {
+        $error = 'Please select a role.';
+    } elseif (!isset($roleConfig[$role])) {
+        $error = 'Please select a valid role.';
+    } elseif (empty($email) || empty($password)) {
         $error = 'Please fill in all fields.';
     } else {
-        $stmt = $conn->prepare("SELECT id, name, password FROM students WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $config = $roleConfig[$role];
+        $sql = sprintf('SELECT id, name, email, password FROM %s WHERE email = ? LIMIT 1', $config['table']);
+        $stmt = $conn->prepare($sql);
 
-        if ($result->num_rows === 1) {
-            $student = $result->fetch_assoc();
-            if (password_verify($password, $student['password'])) {
-                $_SESSION['student_id'] = $student['id'];
-                $_SESSION['student_name'] = $student['name'];
-                header('Location: student-panel.php');
-                exit;
-            } else {
-                $error = 'Invalid password.';
-            }
+        if (!$stmt) {
+            $error = 'Login is temporarily unavailable. Please try again.';
         } else {
-            $error = 'No account found with this email.';
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
+
+            if (!$user || !password_verify($password, $user['password'])) {
+                $error = 'Invalid email or password.';
+            } else {
+                $_SESSION[$config['id_session']] = (int) $user['id'];
+                $_SESSION[$config['name_session']] = $user['name'];
+
+                if (!empty($config['email_session'])) {
+                    $_SESSION[$config['email_session']] = $user['email'];
+                }
+
+                header('Location: ' . $config['redirect']);
+                exit;
+            }
+
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 ?>
@@ -43,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login - ExamPro</title>
+    <title>Login - ExamPro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -104,9 +151,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateY(-50%);
             color: #94A3B8;
         }
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 0.85rem 1rem 0.85rem 2.75rem;
             border: 2px solid #E2E8F0;
             border-radius: 10px;
             font-family: 'Poppins', sans-serif;
@@ -114,7 +161,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: all 0.3s ease;
             background: #F8FAFC;
         }
-        .form-group input:focus {
+        .form-group input {
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+        }
+        .form-group select {
+            padding: 0.85rem 1rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #4F46E5;
             background: white;
@@ -193,8 +247,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-graduation-cap"></i>
                 <span>Exam<span class="logo-accent">Pro</span></span>
             </div>
-            <h2>Student Login</h2>
-            <p>Enter your credentials to access the student panel</p>
+            <h2>Login</h2>
+            <p>Enter your credentials to access your panel</p>
         </div>
 
         <?php if ($error): ?>
@@ -206,6 +260,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <div class="form-group">
+                <label for="role">Select Role</label>
+                <select id="role" name="role" required>
+                    <option value="">Select Role</option>
+                    <option value="student" <?= (($_POST['role'] ?? '') === 'student') ? 'selected' : '' ?>>Student</option>
+                    <option value="teacher" <?= (($_POST['role'] ?? '') === 'teacher') ? 'selected' : '' ?>>Teacher</option>
+                    <option value="admin" <?= (($_POST['role'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-wrapper">
