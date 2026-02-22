@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once '../config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 function json_response(int $statusCode, bool $success, string $message, array $extra = []): void
 {
@@ -38,8 +38,27 @@ function ensure_registration_table(mysqli $conn): void
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
     if (!$conn->query($sql)) {
-        json_response(500, false, 'Failed to initialize registration table.');
+        json_response(500, false, 'Failed to initialize registration table: ' . mysqli_error($conn));
     }
+}
+
+function email_or_roll_exists(mysqli $conn, string $email, string $rollNumber): bool
+{
+    $checkStmt = $conn->prepare('SELECT id FROM student_registrations WHERE email = ? OR roll_number = ? LIMIT 1');
+    if (!$checkStmt) {
+        json_response(500, false, 'Failed to prepare duplicate check query: ' . mysqli_error($conn));
+    }
+
+    $checkStmt->bind_param('ss', $email, $rollNumber);
+    if (!$checkStmt->execute()) {
+        $checkStmt->close();
+        json_response(500, false, 'Failed to run duplicate check query: ' . mysqli_error($conn));
+    }
+
+    $result = $checkStmt->get_result();
+    $exists = $result && $result->num_rows > 0;
+    $checkStmt->close();
+    return $exists;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -173,6 +192,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_response(422, false, 'Validation failed.', ['errors' => $errors]);
     }
 
+    if (email_or_roll_exists($conn, $email, $rollNumber)) {
+        json_response(409, false, 'Email or roll number already exists.');
+    }
+
     if (!move_uploaded_file($_FILES['idProof']['tmp_name'], $uploadTargetPath)) {
         json_response(500, false, 'Failed to store uploaded ID proof.');
     }
@@ -204,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
             @unlink($uploadTargetPath);
         }
-        json_response(500, false, 'Failed to prepare registration query.');
+        json_response(500, false, 'Failed to prepare registration query: ' . mysqli_error($conn));
     }
 
     $middleNameOrNull = $middleName !== '' ? $middleName : null;
@@ -239,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             json_response(409, false, 'Email or roll number already exists.');
         }
 
-        json_response(500, false, 'Registration failed. Please try again.');
+        json_response(500, false, 'Registration failed: ' . mysqli_error($conn));
     }
 
     json_response(201, true, 'Registration completed successfully.');

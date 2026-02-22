@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../../../config/db.php';
 
 function teacherEnsureSchema(mysqli $conn): void
@@ -38,7 +38,7 @@ function teacherEnsureSchema(mysqli $conn): void
     $checkStmt->close();
 
     if (!$exists) {
-        $name = 'Default Teacher';
+        $name = 'Raju Parmar';
         $insertStmt = $conn->prepare('INSERT INTO teachers (name, email, password) VALUES (?, ?, ?)');
         $insertStmt->bind_param('sss', $name, $defaultTeacherEmail, $defaultTeacherHash);
         $insertStmt->execute();

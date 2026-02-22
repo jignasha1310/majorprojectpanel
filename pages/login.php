@@ -5,6 +5,10 @@ $error = '';
 $success = '';
 $prefillEmail = '';
 $rememberChecked = false;
+$authFlash = (string) ($_SESSION['auth_flash'] ?? '');
+if ($authFlash !== '') {
+    unset($_SESSION['auth_flash']);
+}
 
 $roleConfig = [
     'student' => [
@@ -310,6 +314,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_em
 
         <?php if ($error): ?>
             <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <?php if ($authFlash !== ''): ?>
+            <div class="alert alert-error"><i class="fas fa-clock"></i> <?= htmlspecialchars($authFlash) ?></div>
         <?php endif; ?>
 
         <?php if (isset($_GET['registered'])): ?>

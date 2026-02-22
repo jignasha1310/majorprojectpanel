@@ -203,11 +203,26 @@ img {
     position: relative;
 }
 
-.login-dropdown-toggle i {
+.login-dropdown-toggle i,
+.register-dropdown-toggle i {
     font-size: 0.8rem;
 }
 
-.login-dropdown-menu {
+.login-dropdown-toggle,
+.register-dropdown-toggle {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.login-dropdown-toggle:hover,
+.register-dropdown-toggle:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.login-dropdown-menu,
+.register-dropdown-menu {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
@@ -216,9 +231,14 @@ img {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     border: 1px solid #e2e8f0;
-    display: none;
     padding: 0.5rem;
     z-index: 1100;
+    display: none;
+}
+
+.dropdown-menu-end {
+    left: auto;
+    right: 0;
 }
 
 .login-search-wrap {
@@ -263,6 +283,34 @@ img {
     color: var(--primary);
 }
 
+.register-dropdown {
+    position: relative;
+}
+
+.register-dropdown-menu {
+    padding: 0.5rem;
+}
+
+.register-dropdown-menu .register-option {
+    display: block;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.register-dropdown-menu .register-option i {
+    width: 18px;
+    margin-right: 0.35rem;
+    color: #8b5cf6;
+}
+
+.register-dropdown-menu .register-option:hover {
+    background: #eef2ff;
+    color: var(--primary);
+}
+
 .login-no-results {
     margin-top: 0.25rem;
     padding: 0.5rem 0.75rem;
@@ -270,7 +318,11 @@ img {
     color: #64748b;
 }
 
-.login-dropdown.open .login-dropdown-menu {
+.login-dropdown-menu.show {
+    display: block;
+}
+
+.register-dropdown-menu.show {
     display: block;
 }
 
@@ -1080,24 +1132,30 @@ img {
         min-height: 48px;
     }
 
-    .login-dropdown {
+    .login-dropdown,
+    .register-dropdown {
         width: 100%;
     }
 
-    .login-dropdown .btn {
+    .login-dropdown .btn,
+    .register-dropdown .btn {
         width: 100%;
     }
 
-    .login-dropdown-menu {
+    .login-dropdown-menu,
+    .register-dropdown-menu {
         position: static;
-        display: none;
         box-shadow: none;
         border: 1px solid #e2e8f0;
         margin-top: 0.6rem;
         width: 100%;
     }
 
-    .login-dropdown.open .login-dropdown-menu {
+    .login-dropdown-menu.show {
+        display: block;
+    }
+
+    .register-dropdown-menu.show {
         display: block;
     }
 

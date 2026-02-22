@@ -31,27 +31,39 @@
                 <li><a href="#contact" class="nav-link">Contact</a></li>
             </ul>
             <div class="nav-buttons" id="nav-buttons">
-                <div class="login-dropdown" id="loginDropdown">
-                    <button class="btn btn-outline login-dropdown-toggle" id="loginDropdownToggle" type="button" aria-expanded="false" aria-haspopup="true">
+                <div class="dropdown login-dropdown" id="loginDropdown">
+                    <button class="btn btn-outline login-dropdown-toggle" id="loginDropdownToggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
                         Login <i class="fas fa-chevron-down"></i>
                     </button>
-                    <div class="login-dropdown-menu" id="loginDropdownMenu">
+                    <div class="dropdown-menu login-dropdown-menu dropdown-menu-end" id="loginDropdownMenu">
                         <div class="login-search-wrap">
                             <input type="text" id="loginSearchInput" class="login-search-input" placeholder="Search login panel...">
                         </div>
-                        <a href="pages/login.php" class="login-option" data-label="student login">
+                        <a href="pages/login.php" class="dropdown-item login-option" data-label="student login">
                             <i class="fas fa-user-graduate"></i> Student Login
                         </a>
-                        <a href="pages/teacher/login.php" class="login-option" data-label="teacher login">
+                        <a href="pages/teacher/login.php" class="dropdown-item login-option" data-label="teacher login">
                             <i class="fas fa-chalkboard-teacher"></i> Teacher Login
                         </a>
-                        <a href="pages/admin/login.php" class="login-option" data-label="admin login">
+                        <a href="pages/admin/login.php" class="dropdown-item login-option" data-label="admin login">
                             <i class="fas fa-user-shield"></i> Admin Login
                         </a>
                         <div class="login-no-results" id="loginNoResults" hidden>No login panel found</div>
                     </div>
                 </div>
-                <a href="pages/register.php" class="btn btn-primary">Register</a>
+                <div class="dropdown register-dropdown" id="registerDropdown">
+                    <button class="btn btn-outline register-dropdown-toggle" id="registerDropdownToggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
+                        Register <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu register-dropdown-menu dropdown-menu-end" id="registerDropdownMenu">
+                        <a href="pages/student/register.php" class="dropdown-item register-option">
+                            <i class="fas fa-user-graduate"></i> Student Registration
+                        </a>
+                        <a href="pages/teacher/register.php" class="dropdown-item register-option">
+                            <i class="fas fa-chalkboard-teacher"></i> Teacher Registration
+                        </a>
+                    </div>
+                </div>
             </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu">
                 <span class="bar"></span>
@@ -547,6 +559,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

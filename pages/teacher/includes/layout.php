@@ -4,6 +4,7 @@ function teacherRenderHeader(string $title, string $activeNav): void
     $teacherName = htmlspecialchars($_SESSION['teacher_name'] ?? 'Teacher');
     $isDashboard = $activeNav === 'dashboard';
     $isExams = $activeNav === 'exams';
+    $isProfile = $activeNav === 'profile';
     ?>
     <!doctype html>
     <html lang="en">
@@ -33,6 +34,9 @@ function teacherRenderHeader(string $title, string $activeNav): void
                     </a>
                     <a class="sidebar-link nav-link <?= $isExams ? 'active' : '' ?>" href="exams.php">
                         <i class="bi bi-calendar2-check me-2"></i> Exam Scheduler
+                    </a>
+                    <a class="sidebar-link nav-link <?= $isProfile ? 'active' : '' ?>" href="profile.php">
+                        <i class="bi bi-person-badge me-2"></i> My Profile
                     </a>
                 </nav>
             </div>

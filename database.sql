@@ -1,4 +1,4 @@
--- ExamPro Database Schema
+﻿-- ExamPro Database Schema
 -- Run this in phpMyAdmin or MySQL CLI
 
 CREATE DATABASE IF NOT EXISTS exampro_db;
@@ -45,9 +45,41 @@ CREATE TABLE IF NOT EXISTS student_registrations (
 -- Teachers table
 CREATE TABLE IF NOT EXISTS teachers (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    registration_id VARCHAR(30) NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(80) DEFAULT NULL,
+    last_name VARCHAR(80) DEFAULT NULL,
     email VARCHAR(120) NOT NULL UNIQUE,
+    phone VARCHAR(20) DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
+    dob DATE DEFAULT NULL,
+    gender VARCHAR(20) DEFAULT NULL,
+    qualification VARCHAR(120) DEFAULT NULL,
+    bed_status VARCHAR(20) DEFAULT NULL,
+    university VARCHAR(150) DEFAULT NULL,
+    passing_year SMALLINT DEFAULT NULL,
+    experience_years DECIMAL(4,1) DEFAULT NULL,
+    subjects VARCHAR(255) DEFAULT NULL,
+    photo_path VARCHAR(255) DEFAULT NULL,
+    signature_path VARCHAR(255) DEFAULT NULL,
+    certificate_path VARCHAR(255) DEFAULT NULL,
+    id_proof_path VARCHAR(255) DEFAULT NULL,
+    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'approved',
+    registration_step TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    rejection_reason TEXT DEFAULT NULL,
+    approval_date DATETIME DEFAULT NULL,
+    submitted_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS teacher_notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NULL,
+    target_role VARCHAR(20) NOT NULL DEFAULT 'teacher',
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -117,13 +149,13 @@ CREATE TABLE IF NOT EXISTS student_answers (
 -- =====================
 
 -- Sample students (password: student123)
-INSERT INTO students (name, first_name, last_name, email, phone, roll_number, department, password) VALUES
-('Rahul Sharma', 'Rahul', 'Sharma', 'rahul@student.com', '+91 9876543210', 'BCA/2024/001', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Priya Patel', 'Priya', 'Patel', 'priya@student.com', '+91 9123456789', 'BCA/2024/002', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+INSERT INTO students (name, first_name, last_name, email, phone, profile_image, roll_number, department, password) VALUES
+('Rahul Sharma', 'Rahul', 'Sharma', 'rahul@student.com', '+91 9876543210', 'uploads/profile/rahul_profile.jpg', 'BCA/2024/001', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Priya Patel', 'Priya', 'Patel', 'priya@student.com', '+91 9123456789', 'uploads/profile/priya_profile.jpg', 'BCA/2024/002', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 -- Default teacher login (password: teacher123)
-INSERT INTO teachers (name, email, password) VALUES
-('Default Teacher', 'teacher@exampro.com', '$2y$10$tLg3ve.46FC5bbhiCM5TWe5DqaBHydQneJjf6zVqZBlvPB0f69Jpu');
+INSERT INTO teachers (registration_id, name, first_name, last_name, email, password, status, registration_step) VALUES
+('TCH2026001', 'Raju Parmar', 'Raju', 'Parmar', 'teacher@exampro.com', '$2y$10$tLg3ve.46FC5bbhiCM5TWe5DqaBHydQneJjf6zVqZBlvPB0f69Jpu', 'approved', 3);
 
 -- Default admin login (password: admin123)
 INSERT INTO admins (name, email, password) VALUES
@@ -137,11 +169,11 @@ INSERT INTO exams (teacher_id, title, subject, semester, total_questions, durati
 
 -- Math Questions (Exam 1)
 INSERT INTO questions (exam_id, question_text, option_a, option_b, option_c, option_d, correct_option) VALUES
-(1, 'What is 15 × 12?', '170', '180', '190', '200', 'B'),
+(1, 'What is 15 Ã— 12?', '170', '180', '190', '200', 'B'),
 (1, 'What is the square root of 144?', '10', '11', '12', '14', 'C'),
 (1, 'What is 2^10?', '512', '1024', '2048', '256', 'B'),
-(1, 'What is the value of π (approx)?', '3.14', '2.14', '4.14', '1.14', 'A'),
-(1, 'What is 100 ÷ 8?', '12', '12.5', '13', '11.5', 'B');
+(1, 'What is the value of Ï€ (approx)?', '3.14', '2.14', '4.14', '1.14', 'A'),
+(1, 'What is 100 Ã· 8?', '12', '12.5', '13', '11.5', 'B');
 
 -- C++ Questions (Exam 2)
 INSERT INTO questions (exam_id, question_text, option_a, option_b, option_c, option_d, correct_option) VALUES

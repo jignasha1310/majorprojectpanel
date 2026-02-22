@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/bootstrap.php';
 
 if (isset($_SESSION['admin_id'])) {
@@ -9,6 +9,10 @@ if (isset($_SESSION['admin_id'])) {
 $error = '';
 $prefillEmail = '';
 $rememberChecked = false;
+$authFlash = (string) ($_SESSION['auth_flash'] ?? '');
+if ($authFlash !== '') {
+    unset($_SESSION['auth_flash']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -234,6 +238,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_admin_emai
 
     <?php if ($error !== ''): ?>
         <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <?php if ($authFlash !== ''): ?>
+        <div class="alert alert-error"><i class="fas fa-clock"></i> <?= htmlspecialchars($authFlash) ?></div>
     <?php endif; ?>
 
     <?php if ($flash = adminFlash('success')): ?>

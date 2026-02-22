@@ -5,6 +5,7 @@ function adminRenderHeader(string $title, string $activeNav): void
     $isDashboard = $activeNav === 'dashboard';
     $isStudents = $activeNav === 'students';
     $isTeachers = $activeNav === 'teachers';
+    $isTeacherRequests = $activeNav === 'teacher_requests';
     $isExams = $activeNav === 'exams';
     $isResults = $activeNav === 'results';
     ?>
@@ -39,6 +40,9 @@ function adminRenderHeader(string $title, string $activeNav): void
                     </a>
                     <a class="sidebar-link nav-link <?= $isTeachers ? 'active' : '' ?>" href="teachers.php">
                         <i class="fa-solid fa-chalkboard-user me-2"></i> Teachers
+                    </a>
+                    <a class="sidebar-link nav-link <?= $isTeacherRequests ? 'active' : '' ?>" href="teacher-requests.php">
+                        <i class="fa-solid fa-user-check me-2"></i> Teacher Requests
                     </a>
                     <a class="sidebar-link nav-link <?= $isExams ? 'active' : '' ?>" href="exams.php">
                         <i class="fa-solid fa-file-pen me-2"></i> Exams

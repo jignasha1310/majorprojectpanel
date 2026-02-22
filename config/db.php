@@ -37,6 +37,36 @@ if (!isset($_SESSION['session_last_regen'])) {
     $_SESSION['session_last_regen'] = time();
 }
 
+$authTimeoutSeconds = 20 * 60;
+$authSessionKeys = ['student_id', 'teacher_id', 'admin_id'];
+$isAuthenticated = false;
+foreach ($authSessionKeys as $authKey) {
+    if (isset($_SESSION[$authKey])) {
+        $isAuthenticated = true;
+        break;
+    }
+}
+
+if ($isAuthenticated) {
+    $now = time();
+    $lastActivity = (int) ($_SESSION['session_last_activity'] ?? 0);
+    if ($lastActivity > 0 && ($now - $lastActivity) > $authTimeoutSeconds) {
+        unset(
+            $_SESSION['student_id'],
+            $_SESSION['student_name'],
+            $_SESSION['teacher_id'],
+            $_SESSION['teacher_name'],
+            $_SESSION['teacher_email'],
+            $_SESSION['admin_id'],
+            $_SESSION['admin_name'],
+            $_SESSION['admin_email']
+        );
+        $_SESSION['auth_flash'] = 'Session expired due to inactivity. Please log in again.';
+        session_regenerate_id(true);
+    }
+    $_SESSION['session_last_activity'] = $now;
+}
+
 $host = 'localhost';
 $username = 'root';
 $password = '';

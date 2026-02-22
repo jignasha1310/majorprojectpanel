@@ -14,7 +14,6 @@ const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('nav-menu');
 const navButtons = document.getElementById('nav-buttons');
 const loginDropdown = document.querySelector('.login-dropdown');
-const loginDropdownToggle = document.querySelector('.login-dropdown-toggle');
 const loginSearchInput = document.querySelector('.login-search-input');
 const loginOptions = document.querySelectorAll('.login-option');
 const loginNoResults = document.querySelector('.login-no-results');
@@ -23,9 +22,9 @@ hamburger.addEventListener('click', () => {
     navMenu.classList.toggle('active');
     navButtons.classList.toggle('active');
     hamburger.classList.toggle('active');
-    if (!navButtons.classList.contains('active') && loginDropdown) {
-        loginDropdown.classList.remove('open');
-        if (loginDropdownToggle) loginDropdownToggle.setAttribute('aria-expanded', 'false');
+    if (!navButtons.classList.contains('active')) {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+        document.querySelectorAll('.login-dropdown-toggle,.register-dropdown-toggle').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
     }
 });
 
@@ -38,7 +37,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
     });
 });
 
-if (loginDropdown && loginDropdownToggle) {
+if (loginDropdown) {
     const filterLoginOptions = () => {
         if (!loginSearchInput) return;
         const query = loginSearchInput.value.trim().toLowerCase();
@@ -68,38 +67,19 @@ if (loginDropdown && loginDropdownToggle) {
         }
     };
 
-    loginDropdownToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        const isOpen = loginDropdown.classList.toggle('open');
-        loginDropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        if (isOpen) {
-            resetLoginFilter();
-            if (loginSearchInput) loginSearchInput.focus();
+    loginDropdown.addEventListener('show.bs.dropdown', () => {
+        resetLoginFilter();
+        if (loginSearchInput) {
+            setTimeout(() => loginSearchInput.focus(), 50);
         }
     });
 
-    document.addEventListener('click', (e) => {
-        if (!loginDropdown.contains(e.target)) {
-            loginDropdown.classList.remove('open');
-            loginDropdownToggle.setAttribute('aria-expanded', 'false');
-            resetLoginFilter();
-        }
-    });
-
-    loginDropdown.querySelectorAll('.login-dropdown-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            loginDropdown.classList.remove('open');
-            loginDropdownToggle.setAttribute('aria-expanded', 'false');
-            resetLoginFilter();
-        });
-    });
+    loginDropdown.addEventListener('hide.bs.dropdown', resetLoginFilter);
 
     if (loginSearchInput) {
         loginSearchInput.addEventListener('input', filterLoginOptions);
         loginSearchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                loginDropdown.classList.remove('open');
-                loginDropdownToggle.setAttribute('aria-expanded', 'false');
                 resetLoginFilter();
             }
         });
