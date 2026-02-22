@@ -128,32 +128,6 @@ $exams_q = $conn->query("SELECT * FROM exams WHERE status IN ('scheduled','activ
                 </div>
             </div>
 
-            <div class="features-section">
-                <h2>Quick Actions</h2>
-                <div class="feature-cards">
-                    <a href="student-profile.php" class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
-                        <h3>Secure Login & Profile Management</h3>
-                        <p>Manage your account, update profile, and keep your credentials secure</p>
-                    </a>
-                    <a href="scheduled-exams.php" class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-calendar-week"></i></div>
-                        <h3>View Scheduled & Active Exams</h3>
-                        <p>See all your upcoming exams and currently active tests</p>
-                    </a>
-                    <a href="take-exam.php" class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-laptop-code"></i></div>
-                        <h3>Real-time MCQ Examination</h3>
-                        <p>Take exams with live timer and auto-submit when time expires</p>
-                    </a>
-                    <a href="my-results.php" class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-file-alt"></i></div>
-                        <h3>Instant Scorecard & Answer Review</h3>
-                        <p>View your scores immediately and review correct answers</p>
-                    </a>
-                </div>
-            </div>
-
             <div class="upcoming-section">
                 <h2>Upcoming Exams</h2>
                 <div class="upcoming-list">

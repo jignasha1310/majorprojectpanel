@@ -1,625 +1,614 @@
 <?php
-require_once '../config/db.php';
+declare(strict_types=1);
 
-$error = '';
+require_once '../config/config.php';
 
-if (isset($_SESSION['student_id'])) {
-    header('Location: student-panel.php');
+function json_response(int $statusCode, bool $success, string $message, array $extra = []): void
+{
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode(array_merge([
+        'success' => $success,
+        'message' => $message,
+    ], $extra));
     exit;
 }
 
-function ensure_student_profiles_table(mysqli $conn): void
+function ensure_registration_table(mysqli $conn): void
 {
-    $sql = "CREATE TABLE IF NOT EXISTS student_profiles (
+    $sql = "CREATE TABLE IF NOT EXISTS student_registrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        student_id INT NOT NULL UNIQUE,
-        first_name VARCHAR(60) NOT NULL,
-        last_name VARCHAR(60) NOT NULL,
-        dob DATE NOT NULL,
+        first_name VARCHAR(80) NOT NULL,
+        middle_name VARCHAR(80) DEFAULT NULL,
+        last_name VARCHAR(80) NOT NULL,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        contact_number VARCHAR(20) NOT NULL,
         gender ENUM('Male', 'Female', 'Other') NOT NULL,
-        address TEXT NOT NULL,
-        city VARCHAR(100) NOT NULL,
-        zip_code VARCHAR(12) NOT NULL,
-        mobile_country_code VARCHAR(8) NOT NULL,
-        mobile_number VARCHAR(20) NOT NULL,
-        photo_path VARCHAR(255) NOT NULL,
-        signature_path VARCHAR(255) NOT NULL,
-        branch VARCHAR(100) NOT NULL,
-        course_program VARCHAR(120) NOT NULL,
-        current_semester VARCHAR(40) NOT NULL,
-        selected_subjects TEXT NOT NULL,
-        exam_medium VARCHAR(40) NOT NULL,
-        marksheet_path VARCHAR(255) DEFAULT NULL,
-        terms_accepted TINYINT(1) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+        dob DATE NOT NULL,
+        roll_number VARCHAR(80) NOT NULL UNIQUE,
+        course_program VARCHAR(100) NOT NULL,
+        current_semester_year VARCHAR(50) NOT NULL,
+        previous_cgpa DECIMAL(4,2) DEFAULT NULL,
+        examination_name VARCHAR(120) NOT NULL,
+        subjects TEXT NOT NULL,
+        exam_language ENUM('English', 'Hindi') NOT NULL,
+        id_proof_path VARCHAR(255) NOT NULL,
+        declaration_accepted TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
-    $conn->query($sql);
+    if (!$conn->query($sql)) {
+        json_response(500, false, 'Failed to initialize registration table.');
+    }
 }
-
-function set_new_captcha(): void
-{
-    $_SESSION['register_captcha_a'] = random_int(1, 9);
-    $_SESSION['register_captcha_b'] = random_int(1, 9);
-}
-
-function validate_upload(array $file, array $allowedExts, int $maxBytes, bool $required, string $label): array
-{
-    if (!isset($file['error']) || !isset($file['name']) || !isset($file['tmp_name'])) {
-        return [false, "$label upload data is missing.", null, null];
-    }
-
-    if ($file['error'] === UPLOAD_ERR_NO_FILE) {
-        if ($required) {
-            return [false, "$label is required.", null, null];
-        }
-        return [true, '', null, null];
-    }
-
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        return [false, "$label upload failed.", null, null];
-    }
-
-    if (($file['size'] ?? 0) > $maxBytes) {
-        return [false, "$label must be smaller than " . (int) ($maxBytes / (1024 * 1024)) . "MB.", null, null];
-    }
-
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if (!in_array($ext, $allowedExts, true)) {
-        return [false, "$label format is invalid.", null, null];
-    }
-
-    return [true, '', $file['tmp_name'], $ext];
-}
-
-ensure_student_profiles_table($conn);
-
-if (!isset($_SESSION['register_captcha_a'], $_SESSION['register_captcha_b'])) {
-    set_new_captcha();
-}
-
-$subjectOptions = ['Mathematics', 'Physics', 'Chemistry', 'Computer Science', 'English', 'Economics'];
-$mediumOptions = ['English', 'Hindi', 'Bilingual'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $first_name = trim($_POST['first_name'] ?? '');
-    $last_name = trim($_POST['last_name'] ?? '');
-    $name = trim($first_name . ' ' . $last_name);
-    $dob = trim($_POST['dob'] ?? '');
-    $gender = trim($_POST['gender'] ?? '');
-    $address = trim($_POST['address'] ?? '');
-    $city = trim($_POST['city'] ?? '');
-    $zip_code = trim($_POST['zip_code'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $mobile_country_code = trim($_POST['mobile_country_code'] ?? '+91');
-    $mobile_number = trim($_POST['mobile_number'] ?? '');
+    ensure_registration_table($conn);
 
-    $roll_number = trim($_POST['roll_number'] ?? '');
-    $department = trim($_POST['department'] ?? 'BCA');
-    $branch = trim($_POST['branch'] ?? '');
-    $course_program = trim($_POST['course_program'] ?? '');
-    $current_semester = trim($_POST['current_semester'] ?? 'Semester 1');
-
-    $subjects = $_POST['subjects'] ?? [];
-    $exam_medium = trim($_POST['exam_medium'] ?? 'English');
-
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $captcha_answer = trim($_POST['captcha_answer'] ?? '');
-    $terms = isset($_POST['terms']) ? 1 : 0;
+    $requiredFields = [
+        'firstName',
+        'lastName',
+        'email',
+        'contact',
+        'gender',
+        'dob',
+        'rollNumber',
+        'courseProgram',
+        'semesterYear',
+        'examName',
+        'examLanguage',
+    ];
 
     $errors = [];
-
-    if (
-        $first_name === '' || $last_name === '' || $dob === '' || $gender === '' || $address === '' || $city === '' ||
-        $zip_code === '' || $email === '' || $mobile_country_code === '' || $mobile_number === '' ||
-        $roll_number === '' || $department === '' || $branch === '' || $course_program === '' ||
-        $current_semester === '' || $password === '' || $confirm_password === '' || $captcha_answer === ''
-    ) {
-        $errors[] = 'Please fill in all required fields.';
+    foreach ($requiredFields as $field) {
+        if (!isset($_POST[$field]) || trim((string) $_POST[$field]) === '') {
+            $errors[] = "$field is required.";
+        }
     }
+
+    $firstName = trim((string) ($_POST['firstName'] ?? ''));
+    $middleName = trim((string) ($_POST['middleName'] ?? ''));
+    $lastName = trim((string) ($_POST['lastName'] ?? ''));
+    $email = trim((string) ($_POST['email'] ?? ''));
+    $contact = trim((string) ($_POST['contact'] ?? ''));
+    $gender = trim((string) ($_POST['gender'] ?? ''));
+    $dob = trim((string) ($_POST['dob'] ?? ''));
+    $rollNumber = trim((string) ($_POST['rollNumber'] ?? ''));
+    $courseProgram = trim((string) ($_POST['courseProgram'] ?? ''));
+    $semesterYear = trim((string) ($_POST['semesterYear'] ?? ''));
+    $cgpaRaw = trim((string) ($_POST['cgpa'] ?? ''));
+    $examName = trim((string) ($_POST['examName'] ?? ''));
+    $examLanguage = trim((string) ($_POST['examLanguage'] ?? ''));
+    $subjects = $_POST['subjects'] ?? [];
+    $declaration = isset($_POST['declaration']) ? 1 : 0;
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+        $errors[] = 'Invalid email format.';
     }
 
-    if (!preg_match('/^\+\d{1,4}$/', $mobile_country_code)) {
-        $errors[] = 'Country code must be like +91.';
-    }
-
-    if (!preg_match('/^\d{7,15}$/', $mobile_number)) {
-        $errors[] = 'Mobile number must contain 7 to 15 digits.';
-    }
-
-    if (!preg_match('/^[A-Za-z0-9\/-]{3,50}$/', $roll_number)) {
-        $errors[] = 'Roll number format is invalid.';
-    }
-
-    if (!preg_match('/^\d{4,10}$/', $zip_code)) {
-        $errors[] = 'Zip code must contain 4 to 10 digits.';
-    }
-
-    $dobDate = DateTime::createFromFormat('Y-m-d', $dob);
-    $today = new DateTime('today');
-    if (!$dobDate || $dobDate->format('Y-m-d') !== $dob || $dobDate > $today) {
-        $errors[] = 'Please enter a valid date of birth.';
+    if (!preg_match('/^[0-9+\-()\s]{7,15}$/', $contact)) {
+        $errors[] = 'Invalid contact number format.';
     }
 
     if (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
-        $errors[] = 'Please select a valid gender.';
+        $errors[] = 'Invalid gender selected.';
     }
 
-    if (!in_array($exam_medium, $mediumOptions, true)) {
-        $errors[] = 'Please select a valid exam medium.';
+    if (!in_array($examLanguage, ['English', 'Hindi'], true)) {
+        $errors[] = 'Invalid exam language selected.';
     }
 
     if (!is_array($subjects) || count($subjects) === 0) {
-        $errors[] = 'Select at least one subject.';
-    } else {
-        foreach ($subjects as $subject) {
-            if (!in_array($subject, $subjectOptions, true)) {
-                $errors[] = 'Invalid subject selection.';
-                break;
+        $errors[] = 'At least one subject is required.';
+    }
+
+    if ($declaration !== 1) {
+        $errors[] = 'You must agree to the declaration.';
+    }
+
+    $cgpa = null;
+    if ($cgpaRaw !== '') {
+        if (!is_numeric($cgpaRaw)) {
+            $errors[] = 'CGPA must be a valid number.';
+        } else {
+            $cgpa = (float) $cgpaRaw;
+            if ($cgpa < 0 || $cgpa > 10) {
+                $errors[] = 'CGPA must be between 0 and 10.';
             }
         }
     }
 
-    if ($password !== $confirm_password) {
-        $errors[] = 'Passwords do not match.';
+    if (!isset($_FILES['idProof'])) {
+        $errors[] = 'ID proof file is required.';
     }
 
-    if (
-        strlen($password) < 8 ||
-        !preg_match('/[A-Z]/', $password) ||
-        !preg_match('/[a-z]/', $password) ||
-        !preg_match('/\d/', $password) ||
-        !preg_match('/[^A-Za-z0-9]/', $password)
-    ) {
-        $errors[] = 'Password must be at least 8 characters and include uppercase, lowercase, number and special character.';
-    }
+    $storedRelativePath = '';
+    $uploadTargetPath = '';
 
-    $expectedCaptcha = (int) ($_SESSION['register_captcha_a'] ?? -1) + (int) ($_SESSION['register_captcha_b'] ?? -1);
-    if ((int) $captcha_answer !== $expectedCaptcha) {
-        $errors[] = 'Captcha answer is incorrect.';
-    }
+    if (isset($_FILES['idProof'])) {
+        $idProof = $_FILES['idProof'];
 
-    if ($terms !== 1) {
-        $errors[] = 'You must accept the declaration and terms.';
-    }
+        if (($idProof['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $errors[] = 'ID proof upload failed.';
+        } else {
+            $originalName = (string) ($idProof['name'] ?? '');
+            $tmpName = (string) ($idProof['tmp_name'] ?? '');
+            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
 
-    [$okPhoto, $photoErr, $photoTmp, $photoExt] = validate_upload($_FILES['photo'] ?? [], ['jpg', 'jpeg', 'png'], 2 * 1024 * 1024, true, 'Photograph');
-    [$okSign, $signErr, $signTmp, $signExt] = validate_upload($_FILES['signature'] ?? [], ['jpg', 'jpeg', 'png'], 2 * 1024 * 1024, true, 'Signature');
-    [$okMarksheet, $marksheetErr, $marksheetTmp, $marksheetExt] = validate_upload($_FILES['marksheet'] ?? [], ['pdf', 'jpg', 'jpeg', 'png'], 5 * 1024 * 1024, false, 'Marksheet');
-
-    if (!$okPhoto) { $errors[] = $photoErr; }
-    if (!$okSign) { $errors[] = $signErr; }
-    if (!$okMarksheet) { $errors[] = $marksheetErr; }
-
-    $savedFiles = [];
-
-    if (empty($errors)) {
-        $check = $conn->prepare('SELECT id FROM students WHERE email = ? OR roll_number = ?');
-        $check->bind_param('ss', $email, $roll_number);
-        $check->execute();
-        if ($check->get_result()->num_rows > 0) {
-            $errors[] = 'An account with this email or roll number already exists.';
-        }
-        $check->close();
-    }
-
-    if (empty($errors)) {
-        $baseUploadDir = __DIR__ . '/uploads/student_docs';
-        $photoDir = $baseUploadDir . '/photos';
-        $signDir = $baseUploadDir . '/signatures';
-        $marksheetDir = $baseUploadDir . '/marksheets';
-
-        if (!is_dir($photoDir) && !mkdir($photoDir, 0755, true) && !is_dir($photoDir)) { $errors[] = 'Could not create photo upload directory.'; }
-        if (!is_dir($signDir) && !mkdir($signDir, 0755, true) && !is_dir($signDir)) { $errors[] = 'Could not create signature upload directory.'; }
-        if (!is_dir($marksheetDir) && !mkdir($marksheetDir, 0755, true) && !is_dir($marksheetDir)) { $errors[] = 'Could not create marksheet upload directory.'; }
-
-        if (empty($errors)) {
-            $photoFileName = 'photo_' . uniqid('', true) . '.' . $photoExt;
-            $signFileName = 'sign_' . uniqid('', true) . '.' . $signExt;
-            $marksheetFileName = $marksheetTmp ? ('marksheet_' . uniqid('', true) . '.' . $marksheetExt) : null;
-
-            $photoDiskPath = $photoDir . '/' . $photoFileName;
-            $signDiskPath = $signDir . '/' . $signFileName;
-            $marksheetDiskPath = $marksheetFileName ? ($marksheetDir . '/' . $marksheetFileName) : null;
-
-            if (!move_uploaded_file($photoTmp, $photoDiskPath)) {
-                $errors[] = 'Failed to save photograph file.';
-            } else {
-                $savedFiles[] = $photoDiskPath;
+            if (!in_array($extension, $allowedExtensions, true)) {
+                $errors[] = 'Only JPG, PNG, and PDF files are allowed.';
             }
 
-            if (!move_uploaded_file($signTmp, $signDiskPath)) {
-                $errors[] = 'Failed to save signature file.';
-            } else {
-                $savedFiles[] = $signDiskPath;
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo ? (string) finfo_file($finfo, $tmpName) : '';
+            if ($finfo) {
+                finfo_close($finfo);
             }
 
-            if ($marksheetTmp && $marksheetDiskPath) {
-                if (!move_uploaded_file($marksheetTmp, $marksheetDiskPath)) {
-                    $errors[] = 'Failed to save marksheet file.';
-                } else {
-                    $savedFiles[] = $marksheetDiskPath;
-                }
+            $allowedMimeTypes = [
+                'image/jpeg',
+                'image/png',
+                'application/pdf',
+            ];
+
+            if ($mimeType !== '' && !in_array($mimeType, $allowedMimeTypes, true)) {
+                $errors[] = 'Invalid file MIME type for ID proof.';
             }
 
             if (empty($errors)) {
-                $photoRelPath = 'uploads/student_docs/photos/' . $photoFileName;
-                $signRelPath = 'uploads/student_docs/signatures/' . $signFileName;
-                $marksheetRelPath = $marksheetFileName ? ('uploads/student_docs/marksheets/' . $marksheetFileName) : null;
-
-                $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $subjectsJson = json_encode(array_values($subjects), JSON_UNESCAPED_UNICODE);
-
-                $conn->begin_transaction();
-
-                $studentInserted = false;
-                $profileInserted = false;
-
-                $studentStmt = $conn->prepare('INSERT INTO students (name, email, roll_number, department, password) VALUES (?, ?, ?, ?, ?)');
-                if ($studentStmt) {
-                    $studentStmt->bind_param('sssss', $name, $email, $roll_number, $department, $hashed);
-                    $studentInserted = $studentStmt->execute();
+                $uploadDir = __DIR__ . '/../uploads';
+                if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                    $errors[] = 'Unable to create upload directory.';
+                } else {
+                    $safeName = 'id_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+                    $uploadTargetPath = $uploadDir . '/' . $safeName;
+                    $storedRelativePath = 'uploads/' . $safeName;
                 }
-
-                if ($studentInserted) {
-                    $studentId = $conn->insert_id;
-                    $profileStmt = $conn->prepare('INSERT INTO student_profiles (
-                        student_id, first_name, last_name, dob, gender, address, city, zip_code,
-                        mobile_country_code, mobile_number, photo_path, signature_path,
-                        branch, course_program, current_semester, selected_subjects, exam_medium,
-                        marksheet_path, terms_accepted
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-
-                    if ($profileStmt) {
-                        $profileStmt->bind_param('isssssssssssssssssi', $studentId, $first_name, $last_name, $dob, $gender, $address, $city, $zip_code, $mobile_country_code, $mobile_number, $photoRelPath, $signRelPath, $branch, $course_program, $current_semester, $subjectsJson, $exam_medium, $marksheetRelPath, $terms);
-                        $profileInserted = $profileStmt->execute();
-                        $profileStmt->close();
-                    }
-                }
-
-                if ($studentStmt) { $studentStmt->close(); }
-
-                if ($studentInserted && $profileInserted) {
-                    $conn->commit();
-                    set_new_captcha();
-                    header('Location: login.php?registered=1');
-                    exit;
-                }
-
-                $conn->rollback();
-                $errors[] = 'Registration failed. Please try again.';
             }
         }
     }
 
     if (!empty($errors)) {
-        foreach ($savedFiles as $savedFile) {
-            if (is_file($savedFile)) { @unlink($savedFile); }
-        }
-        $error = implode(' ', array_unique($errors));
+        json_response(422, false, 'Validation failed.', ['errors' => $errors]);
     }
 
-    set_new_captcha();
-}
+    if (!move_uploaded_file($_FILES['idProof']['tmp_name'], $uploadTargetPath)) {
+        json_response(500, false, 'Failed to store uploaded ID proof.');
+    }
 
-$captchaA = (int) ($_SESSION['register_captcha_a'] ?? 0);
-$captchaB = (int) ($_SESSION['register_captcha_b'] ?? 0);
+    $subjectsCsv = implode(',', array_map(static function ($subject): string {
+        return trim((string) $subject);
+    }, $subjects));
+
+    $stmt = $conn->prepare('INSERT INTO student_registrations (
+        first_name,
+        middle_name,
+        last_name,
+        email,
+        contact_number,
+        gender,
+        dob,
+        roll_number,
+        course_program,
+        current_semester_year,
+        previous_cgpa,
+        examination_name,
+        subjects,
+        exam_language,
+        id_proof_path,
+        declaration_accepted
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+
+    if (!$stmt) {
+        if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
+            @unlink($uploadTargetPath);
+        }
+        json_response(500, false, 'Failed to prepare registration query.');
+    }
+
+    $middleNameOrNull = $middleName !== '' ? $middleName : null;
+    $cgpaOrNull = $cgpa;
+
+    $stmt->bind_param(
+        'ssssssssssdssssi',
+        $firstName,
+        $middleNameOrNull,
+        $lastName,
+        $email,
+        $contact,
+        $gender,
+        $dob,
+        $rollNumber,
+        $courseProgram,
+        $semesterYear,
+        $cgpaOrNull,
+        $examName,
+        $subjectsCsv,
+        $examLanguage,
+        $storedRelativePath,
+        $declaration
+    );
+
+    if (!$stmt->execute()) {
+        if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
+            @unlink($uploadTargetPath);
+        }
+
+        if ((int) $stmt->errno === 1062) {
+            json_response(409, false, 'Email or roll number already exists.');
+        }
+
+        json_response(500, false, 'Registration failed. Please try again.');
+    }
+
+    json_response(201, true, 'Registration completed successfully.');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Registration - ExamPro</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Online Examination System - Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top left, #e0f2fe, #f1f5f9 45%, #eef2ff 100%);
             min-height: 100vh;
-            background: linear-gradient(135deg, #c8ceee, #b9c1e6);
-            padding: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .register-shell {
-            width: 100%;
-            max-width: 1240px;
-            min-height: 86vh;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
-            background: #101321;
-        }
-        .form-pane {
-            background: linear-gradient(180deg, #191c2a, #151825);
-            padding: 2rem 1.9rem 1.5rem;
-            color: #e5e7eb;
-            overflow-y: auto;
-        }
-        .pane-inner { position: relative; z-index: 2; }
-
-        .form-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem; }
-        .form-subtitle { color: #9ca3af; font-size: 0.95rem; margin-bottom: 1rem; }
-        .section-title {
-            margin: 1rem 0 0.7rem;
-            color: #e5e7eb;
-            font-size: 0.84rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #2f3343;
-            padding-bottom: 0.35rem;
         }
 
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem 0.8rem; }
-        .form-group { margin-bottom: 0.1rem; }
-        .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.25rem; }
-        .input-wrap { position: relative; }
-        .input-wrap i {
-            position: absolute;
-            left: 0.8rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 0.85rem;
+        .step-pane {
+            display: none;
+            opacity: 0;
+            transform: translateY(8px);
         }
-        .input-wrap .fa-lock { color: #94a3b8; font-size: 0.9rem; }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.62rem 0.8rem 0.62rem 2.2rem;
-            border: 1px solid #343a4f;
-            border-radius: 8px;
-            font-size: 0.84rem;
-            color: #172f4f;
-            background: #f7f9fe;
-            font-family: 'Poppins', sans-serif;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        .step-pane.active {
+            display: block;
+            animation: fadeInStep 0.35s ease forwards;
         }
-        .form-group textarea { min-height: 78px; resize: vertical; padding-left: 0.8rem; }
-        .form-group input[type="file"] { padding-left: 0.8rem; background: #ffffff; }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
-        }
-        .form-group select { appearance: none; cursor: pointer; }
-        .select-wrap::after {
-            content: '\f107';
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            position: absolute;
-            right: 0.85rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #7c8ea6;
-            pointer-events: none;
-            font-size: 0.82rem;
-        }
-        .full-width { grid-column: 1 / -1; }
-        .helper { color: #9ca3af; font-size: 0.73rem; margin-top: 0.18rem; }
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.32rem 0.5rem;
-            padding: 0.55rem;
-            border: 1px solid #343a4f;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.06);
-        }
-        .checkbox-grid label {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            color: #e2e8f0;
-            font-size: 0.79rem;
-            margin: 0;
-        }
-        .checkbox-grid input { accent-color: #8b5cf6; width: auto; }
 
-        .captcha-box { display: flex; gap: 0.55rem; align-items: center; }
-        .captcha-question {
-            min-width: 115px;
-            padding: 0.55rem;
-            border-radius: 8px;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-            border: 1px dashed rgba(255, 255, 255, 0.35);
-            font-weight: 600;
-            font-size: 0.84rem;
-        }
-        .declaration {
-            display: flex;
-            gap: 0.5rem;
-            color: #cbd5e1;
-            font-size: 0.79rem;
-            align-items: flex-start;
-        }
-        .declaration input { margin-top: 0.14rem; accent-color: #8b5cf6; }
-        .strength { font-size: 0.75rem; margin-top: 0.22rem; font-weight: 600; color: #64748b; }
-
-        .btn-register {
-            width: 100%;
-            border: none;
-            min-height: 46px;
-            border-radius: 9px;
-            font-size: 0.93rem;
-            font-weight: 600;
-            color: #fff;
-            background: linear-gradient(90deg, #8b5cf6, #7c4bd9);
-            cursor: pointer;
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
-        }
-        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(124, 75, 217, 0.3); }
-
-        .alert { padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.84rem; margin-bottom: 0.9rem; }
-        .alert-error { background: #fff1f2; color: #dc2626; border: 1px solid #fecdd3; }
-
-        .register-footer { margin-top: 1rem; text-align: center; color: #9ca3af; font-size: 0.86rem; }
-        .register-footer a { color: #c4b5fd; text-decoration: none; font-weight: 600; }
-        .register-footer a:hover { text-decoration: underline; }
-
-        @media (max-width: 1050px) {
-            .register-shell { min-height: unset; }
-            .form-pane { max-height: none; }
-        }
-        @media (max-width: 760px) {
-            .form-pane { padding: 1rem; }
-            .form-row { grid-template-columns: 1fr; }
-            .checkbox-grid { grid-template-columns: 1fr; }
-            .captcha-box { flex-direction: column; align-items: stretch; }
+        @keyframes fadeInStep {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
-<body>
-    <div class="register-shell">
-        <section class="form-pane">
-            <h1 class="form-title">Register</h1>
-            <p class="form-subtitle">Enter your account details</p>
+<body class="font-sans p-4 sm:p-6">
+    <main class="mx-auto w-full max-w-4xl">
+        <section class="rounded-2xl bg-white/95 shadow-xl shadow-slate-200/60 backdrop-blur-sm border border-slate-200">
+            <div class="px-5 pt-6 pb-4 sm:px-8 sm:pt-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">Student Registration</h1>
+                <p class="mt-1 text-sm sm:text-base text-slate-500">Online Examination System</p>
+            </div>
 
-            <?php if ($error): ?>
-                <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-            <?php endif; ?>
-
-            <form method="POST" action="" enctype="multipart/form-data" id="student-register-form" novalidate>
-                <h3 class="section-title">Personal Details</h3>
-                <div class="form-row">
-                    <div class="form-group"><label for="first_name">First Name</label><div class="input-wrap"><i class="fas fa-user"></i><input type="text" id="first_name" name="first_name" value="<?= htmlspecialchars($_POST['first_name'] ?? '') ?>" required maxlength="60"></div></div>
-                    <div class="form-group"><label for="last_name">Last Name</label><div class="input-wrap"><i class="fas fa-user"></i><input type="text" id="last_name" name="last_name" value="<?= htmlspecialchars($_POST['last_name'] ?? '') ?>" required maxlength="60"></div></div>
-                    <div class="form-group"><label for="dob">Date of Birth</label><div class="input-wrap"><i class="fas fa-calendar"></i><input type="date" id="dob" name="dob" value="<?= htmlspecialchars($_POST['dob'] ?? '') ?>" max="<?= date('Y-m-d') ?>" required></div></div>
-                    <div class="form-group"><label for="gender">Gender</label><div class="input-wrap select-wrap"><i class="fas fa-venus-mars"></i><select id="gender" name="gender" required><option value="">Select gender</option><option value="Male" <?= (($_POST['gender'] ?? '') === 'Male') ? 'selected' : '' ?>>Male</option><option value="Female" <?= (($_POST['gender'] ?? '') === 'Female') ? 'selected' : '' ?>>Female</option><option value="Other" <?= (($_POST['gender'] ?? '') === 'Other') ? 'selected' : '' ?>>Other</option></select></div></div>
-                    <div class="form-group full-width"><label for="address">Address</label><textarea id="address" name="address" required><?= htmlspecialchars($_POST['address'] ?? '') ?></textarea></div>
-                    <div class="form-group"><label for="city">City</label><div class="input-wrap"><i class="fas fa-city"></i><input type="text" id="city" name="city" value="<?= htmlspecialchars($_POST['city'] ?? '') ?>" required maxlength="100"></div></div>
-                    <div class="form-group"><label for="zip_code">Zip Code</label><div class="input-wrap"><i class="fas fa-map-pin"></i><input type="text" id="zip_code" name="zip_code" pattern="\d{4,10}" value="<?= htmlspecialchars($_POST['zip_code'] ?? '') ?>" required></div></div>
-                    <div class="form-group"><label for="email">Email Address</label><div class="input-wrap"><i class="fas fa-envelope"></i><input type="email" id="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required></div></div>
-                    <div class="form-group"><label for="mobile_number">Mobile Number</label><div class="form-row" style="grid-template-columns: 115px 1fr; gap: 0.45rem;"><div class="input-wrap"><i class="fas fa-globe"></i><input type="text" id="mobile_country_code" name="mobile_country_code" value="<?= htmlspecialchars($_POST['mobile_country_code'] ?? '+91') ?>" pattern="\+\d{1,4}" required></div><div class="input-wrap"><i class="fas fa-phone"></i><input type="text" id="mobile_number" name="mobile_number" value="<?= htmlspecialchars($_POST['mobile_number'] ?? '') ?>" pattern="\d{7,15}" required></div></div></div>
-                    <div class="form-group"><label for="photo">Photograph</label><input type="file" id="photo" name="photo" accept=".jpg,.jpeg,.png" required><div class="helper">JPG/PNG, max 2MB</div></div>
-                    <div class="form-group"><label for="signature">Signature</label><input type="file" id="signature" name="signature" accept=".jpg,.jpeg,.png" required><div class="helper">JPG/PNG, max 2MB</div></div>
-                </div>
-
-                <h3 class="section-title">Academic Details</h3>
-                <div class="form-row">
-                    <div class="form-group"><label for="roll_number">Roll Number / Student ID</label><div class="input-wrap"><i class="fas fa-id-card"></i><input type="text" id="roll_number" name="roll_number" value="<?= htmlspecialchars($_POST['roll_number'] ?? '') ?>" required maxlength="50"></div></div>
-                    <div class="form-group"><label for="department">Department / Branch</label><div class="input-wrap select-wrap"><i class="fas fa-building"></i><select id="department" name="department" required><option value="BCA" <?= (($_POST['department'] ?? 'BCA') === 'BCA') ? 'selected' : '' ?>>BCA</option><option value="BBA" <?= (($_POST['department'] ?? '') === 'BBA') ? 'selected' : '' ?>>BBA</option><option value="BSc" <?= (($_POST['department'] ?? '') === 'BSc') ? 'selected' : '' ?>>BSc</option><option value="BCom" <?= (($_POST['department'] ?? '') === 'BCom') ? 'selected' : '' ?>>BCom</option></select></div></div>
-                    <div class="form-group"><label for="branch">Branch</label><div class="input-wrap"><i class="fas fa-code-branch"></i><input type="text" id="branch" name="branch" value="<?= htmlspecialchars($_POST['branch'] ?? '') ?>" required maxlength="100"></div></div>
-                    <div class="form-group"><label for="course_program">Course / Program</label><div class="input-wrap"><i class="fas fa-book"></i><input type="text" id="course_program" name="course_program" value="<?= htmlspecialchars($_POST['course_program'] ?? '') ?>" required maxlength="120"></div></div>
-                    <div class="form-group full-width">
-                        <label for="current_semester">Current Semester / Year</label>
-                        <div class="input-wrap select-wrap"><i class="fas fa-layer-group"></i><select id="current_semester" name="current_semester" required>
-                            <?php
-                            $semesters = ['Semester 1', 'Semester 2', 'Semester 3', 'Semester 4', 'Semester 5', 'Semester 6', 'Year 1', 'Year 2', 'Year 3', 'Year 4'];
-                            $selectedSemester = $_POST['current_semester'] ?? 'Semester 1';
-                            foreach ($semesters as $semester):
-                            ?>
-                                <option value="<?= htmlspecialchars($semester) ?>" <?= ($selectedSemester === $semester) ? 'selected' : '' ?>><?= htmlspecialchars($semester) ?></option>
-                            <?php endforeach; ?>
-                        </select></div>
+            <div class="px-5 sm:px-8 pb-6">
+                <div class="grid grid-cols-3 gap-2 sm:gap-4" id="progressTracker">
+                    <div class="step-indicator flex flex-col items-center text-center" data-step="1">
+                        <div class="step-dot h-9 w-9 rounded-full border-2 border-slate-300 bg-white text-slate-600 flex items-center justify-center font-semibold text-sm">1</div>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-600">Personal</p>
+                    </div>
+                    <div class="step-indicator flex flex-col items-center text-center" data-step="2">
+                        <div class="step-dot h-9 w-9 rounded-full border-2 border-slate-300 bg-white text-slate-600 flex items-center justify-center font-semibold text-sm">2</div>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-600">Academic</p>
+                    </div>
+                    <div class="step-indicator flex flex-col items-center text-center" data-step="3">
+                        <div class="step-dot h-9 w-9 rounded-full border-2 border-slate-300 bg-white text-slate-600 flex items-center justify-center font-semibold text-sm">3</div>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-600">Exam</p>
                     </div>
                 </div>
-
-                <h3 class="section-title">Examination Specifics</h3>
-                <div class="form-row">
-                    <div class="form-group full-width"><label>Subject Selection</label><div class="checkbox-grid"><?php foreach ($subjectOptions as $subject): ?><label><input type="checkbox" name="subjects[]" value="<?= htmlspecialchars($subject) ?>" <?= in_array($subject, $_POST['subjects'] ?? [], true) ? 'checked' : '' ?>><span><?= htmlspecialchars($subject) ?></span></label><?php endforeach; ?></div></div>
-                    <div class="form-group"><label for="exam_medium">Exam Medium / Language</label><div class="input-wrap select-wrap"><i class="fas fa-language"></i><select id="exam_medium" name="exam_medium" required><?php $selectedMedium = $_POST['exam_medium'] ?? 'English'; foreach ($mediumOptions as $medium): ?><option value="<?= htmlspecialchars($medium) ?>" <?= ($selectedMedium === $medium) ? 'selected' : '' ?>><?= htmlspecialchars($medium) ?></option><?php endforeach; ?></select></div></div>
-                    <div class="form-group"><label for="marksheet">Previous Semester Marksheet</label><input type="file" id="marksheet" name="marksheet" accept=".pdf,.jpg,.jpeg,.png"><div class="helper">Optional, max 5MB</div></div>
-                </div>
-
-                <h3 class="section-title">Security & Submission</h3>
-                <div class="form-row">
-                    <div class="form-group"><label for="password">Password</label><div class="input-wrap"><i class="fas fa-lock"></i><input type="password" id="password" name="password" required minlength="8" autocomplete="new-password"></div><div id="password-strength" class="strength">Strength: -</div></div>
-                    <div class="form-group"><label for="confirm_password">Confirm Password</label><div class="input-wrap"><i class="fas fa-lock"></i><input type="password" id="confirm_password" name="confirm_password" required minlength="8" autocomplete="new-password"></div></div>
-                    <div class="form-group full-width"><label for="captcha_answer">Captcha Verification</label><div class="captcha-box"><div class="captcha-question"><?= $captchaA ?> + <?= $captchaB ?> = ?</div><div class="input-wrap" style="flex: 1;"><i class="fas fa-shield"></i><input type="number" id="captcha_answer" name="captcha_answer" min="0" required></div></div></div>
-                    <div class="form-group full-width"><label class="declaration" for="terms"><input type="checkbox" id="terms" name="terms" value="1" <?= isset($_POST['terms']) ? 'checked' : '' ?> required><span>I declare that the information provided is correct and I agree to the Terms & Conditions.</span></label></div>
-                    <div class="full-width"><button type="submit" class="btn-register">Submit Registration</button></div>
-                </div>
-            </form>
-
-            <div class="register-footer">
-                <p>Already have an account? <a href="login.php">Login here</a></p>
-                <a href="../index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
             </div>
-        </section>
 
-    </div>
+            <form id="registrationForm" class="px-5 pb-8 sm:px-8" method="POST" enctype="multipart/form-data" novalidate>
+                <div id="globalError" class="hidden mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"></div>
+                <div id="globalSuccess" class="hidden mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"></div>
+
+                <section class="step-pane active" data-step="1">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4">Step 1: Personal Details</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                            <input id="firstName" name="firstName" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="middleName" class="block text-sm font-medium text-slate-700 mb-1">Middle Name</label>
+                            <input id="middleName" name="middleName" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                            <input id="lastName" name="lastName" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                            <input id="email" name="email" type="email" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="contact" class="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+                            <input id="contact" name="contact" type="tel" required pattern="^[0-9+\-()\s]{7,15}$" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="e.g. +91 9876543210">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-slate-700 mb-1">Gender</label>
+                            <select id="gender" name="gender" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="dob" class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                            <input id="dob" name="dob" type="date" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="button" class="next-btn rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">Next -></button>
+                    </div>
+                </section>
+
+                <section class="step-pane" data-step="2">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4">Step 2: Academic Details</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="rollNumber" class="block text-sm font-medium text-slate-700 mb-1">Roll Number / Enrollment ID</label>
+                            <input id="rollNumber" name="rollNumber" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="courseProgram" class="block text-sm font-medium text-slate-700 mb-1">Course / Program</label>
+                            <select id="courseProgram" name="courseProgram" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                                <option value="">Select Course</option>
+                                <option value="BCA">BCA</option>
+                                <option value="BBA">BBA</option>
+                                <option value="BCOM">BCOM</option>
+                                <option value="MCA">MCA</option>
+                                <option value="B.Tech">B.Tech</option>
+                                <option value="MBA">MBA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="semesterYear" class="block text-sm font-medium text-slate-700 mb-1">Current Semester / Year</label>
+                            <select id="semesterYear" name="semesterYear" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                                <option value="">Select</option>
+                                <option>Semester 1</option>
+                                <option>Semester 2</option>
+                                <option>Semester 3</option>
+                                <option>Semester 4</option>
+                                <option>Semester 5</option>
+                                <option>Semester 6</option>
+                                <option>Year 1</option>
+                                <option>Year 2</option>
+                                <option>Year 3</option>
+                                <option>Year 4</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cgpa" class="block text-sm font-medium text-slate-700 mb-1">Previous CGPA (Optional)</label>
+                            <input id="cgpa" name="cgpa" type="number" min="0" max="10" step="0.01" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="e.g. 8.25">
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-between">
+                        <button type="button" class="back-btn rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"><- Back</button>
+                        <button type="button" class="next-btn rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition">Next -></button>
+                    </div>
+                </section>
+
+                <section class="step-pane" data-step="3">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4">Step 3: Examination Specifics</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="examName" class="block text-sm font-medium text-slate-700 mb-1">Select Examination Name</label>
+                            <select id="examName" name="examName" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                                <option value="">Select Examination</option>
+                                <option value="Mid Semester Exam">Mid Semester Exam</option>
+                                <option value="End Semester Exam">End Semester Exam</option>
+                                <option value="Competitive Mock Test">Competitive Mock Test</option>
+                                <option value="Entrance Practice Test">Entrance Practice Test</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="idProof" class="block text-sm font-medium text-slate-700 mb-1">Upload ID Proof</label>
+                            <input id="idProof" name="idProof" type="file" required accept=".pdf,.jpg,.jpeg,.png" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="block text-sm font-medium text-slate-700 mb-2">Subjects (Select one or more)</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-slate-200 p-3 bg-slate-50">
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="Mathematics" class="h-4 w-4">Mathematics</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="Physics" class="h-4 w-4">Physics</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="Chemistry" class="h-4 w-4">Chemistry</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="Computer Science" class="h-4 w-4">Computer Science</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="English" class="h-4 w-4">English</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="subjects[]" value="Economics" class="h-4 w-4">Economics</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="block text-sm font-medium text-slate-700 mb-2">Preferred Exam Language</p>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="radio" name="examLanguage" value="English" required class="h-4 w-4">English</label>
+                            <label class="flex items-center gap-2 text-sm text-slate-700"><input type="radio" name="examLanguage" value="Hindi" required class="h-4 w-4">Hindi</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="flex items-start gap-2 text-sm text-slate-700">
+                            <input id="declaration" name="declaration" value="1" type="checkbox" required class="mt-1 h-4 w-4">
+                            <span>I agree that all provided information is correct and can be used for exam registration.</span>
+                        </label>
+                    </div>
+
+                    <div class="mt-6 flex justify-between">
+                        <button type="button" class="back-btn rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"><- Back</button>
+                        <button type="submit" class="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition">Submit Registration</button>
+                    </div>
+                </section>
+            </form>
+        </section>
+    </main>
+
     <script>
         (function () {
-            var form = document.getElementById('student-register-form');
-            var passwordInput = document.getElementById('password');
-            var confirmInput = document.getElementById('confirm_password');
-            var strengthEl = document.getElementById('password-strength');
+            const form = document.getElementById('registrationForm');
+            const panes = Array.from(document.querySelectorAll('.step-pane'));
+            const stepIndicators = Array.from(document.querySelectorAll('.step-indicator'));
+            const globalError = document.getElementById('globalError');
+            const globalSuccess = document.getElementById('globalSuccess');
+            let currentStep = 1;
 
-            function passwordScore(value) {
-                var score = 0;
-                if (value.length >= 8) score++;
-                if (/[A-Z]/.test(value)) score++;
-                if (/[a-z]/.test(value)) score++;
-                if (/\d/.test(value)) score++;
-                if (/[^A-Za-z0-9]/.test(value)) score++;
-                return score;
+            const stepFields = {
+                1: ['firstName', 'lastName', 'email', 'contact', 'gender', 'dob'],
+                2: ['rollNumber', 'courseProgram', 'semesterYear'],
+                3: ['examName', 'idProof', 'declaration']
+            };
+
+            function clearMessages() {
+                globalError.classList.add('hidden');
+                globalSuccess.classList.add('hidden');
+                globalError.textContent = '';
+                globalSuccess.textContent = '';
             }
 
-            function updatePasswordStrength() {
-                var value = passwordInput.value;
-                var score = passwordScore(value);
-                var label = 'Weak';
+            function updateTracker() {
+                stepIndicators.forEach((indicator, index) => {
+                    const step = index + 1;
+                    const dot = indicator.querySelector('.step-dot');
+                    const label = indicator.querySelector('p');
 
-                if (score >= 5) label = 'Strong';
-                else if (score >= 4) label = 'Medium';
+                    dot.className = 'step-dot h-9 w-9 rounded-full border-2 flex items-center justify-center font-semibold text-sm';
+                    label.className = 'mt-2 text-xs sm:text-sm';
 
-                strengthEl.textContent = 'Strength: ' + (value ? label : '-');
-                strengthEl.style.color = '#64748b';
+                    if (step < currentStep) {
+                        dot.classList.add('border-emerald-600', 'bg-emerald-600', 'text-white');
+                        dot.textContent = 'OK';
+                        label.classList.add('text-emerald-700', 'font-semibold');
+                    } else if (step === currentStep) {
+                        dot.classList.add('border-blue-600', 'bg-blue-600', 'text-white');
+                        dot.textContent = String(step);
+                        label.classList.add('text-blue-700', 'font-semibold');
+                    } else {
+                        dot.classList.add('border-slate-300', 'bg-white', 'text-slate-600');
+                        dot.textContent = String(step);
+                        label.classList.add('text-slate-600');
+                    }
+                });
+            }
 
-                if (value && score < 5) {
-                    passwordInput.setCustomValidity('Use 8+ chars with uppercase, lowercase, number and special character.');
-                } else {
-                    passwordInput.setCustomValidity('');
+            function showStep(step) {
+                panes.forEach((pane) => {
+                    pane.classList.remove('active');
+                    if (Number(pane.dataset.step) === step) {
+                        pane.classList.add('active');
+                    }
+                });
+
+                currentStep = step;
+                clearMessages();
+                updateTracker();
+            }
+
+            function validateStep(step) {
+                const fieldIds = stepFields[step] || [];
+                for (const id of fieldIds) {
+                    const field = document.getElementById(id);
+                    if (!field.checkValidity()) {
+                        field.reportValidity();
+                        return false;
+                    }
                 }
-            }
 
-            function validateConfirmPassword() {
-                if (confirmInput.value && confirmInput.value !== passwordInput.value) {
-                    confirmInput.setCustomValidity('Passwords do not match.');
-                } else {
-                    confirmInput.setCustomValidity('');
+                if (step === 3) {
+                    const subjectChecks = form.querySelectorAll('input[name="subjects[]"]:checked');
+                    if (subjectChecks.length === 0) {
+                        globalError.textContent = 'Please select at least one subject before submitting.';
+                        globalError.classList.remove('hidden');
+                        return false;
+                    }
+
+                    const langSelection = form.querySelector('input[name="examLanguage"]:checked');
+                    if (!langSelection) {
+                        globalError.textContent = 'Please choose your preferred exam language.';
+                        globalError.classList.remove('hidden');
+                        return false;
+                    }
                 }
+
+                return true;
             }
 
-            passwordInput.addEventListener('input', function () {
-                updatePasswordStrength();
-                validateConfirmPassword();
+            form.addEventListener('click', (event) => {
+                const nextBtn = event.target.closest('.next-btn');
+                const backBtn = event.target.closest('.back-btn');
+
+                if (nextBtn) {
+                    if (validateStep(currentStep)) {
+                        showStep(Math.min(currentStep + 1, panes.length));
+                    }
+                }
+
+                if (backBtn) {
+                    showStep(Math.max(currentStep - 1, 1));
+                }
             });
-            confirmInput.addEventListener('input', validateConfirmPassword);
 
-            form.addEventListener('submit', function (e) {
-                updatePasswordStrength();
-                validateConfirmPassword();
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                clearMessages();
 
-                var subjects = form.querySelectorAll('input[name="subjects[]"]:checked');
-                if (!subjects.length) {
-                    e.preventDefault();
-                    alert('Please select at least one subject.');
+                if (!validateStep(3)) {
                     return;
                 }
 
-                if (!form.checkValidity()) {
-                    e.preventDefault();
-                    form.reportValidity();
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch('register.php', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        const errorText = Array.isArray(data.errors) && data.errors.length
+                            ? data.errors.join(' ')
+                            : (data.message || 'Registration failed.');
+                        globalError.textContent = errorText;
+                        globalError.classList.remove('hidden');
+                        return;
+                    }
+
+                    globalSuccess.textContent = data.message || 'Registration completed successfully.';
+                    globalSuccess.classList.remove('hidden');
+                    form.reset();
+                    showStep(1);
+                } catch (err) {
+                    globalError.textContent = 'Unable to submit form. Please try again.';
+                    globalError.classList.remove('hidden');
                 }
-            });
+             });
+
+            updateTracker();
         })();
     </script>
 </body>

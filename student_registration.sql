@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS student_registrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(80) NOT NULL,
+    middle_name VARCHAR(80) DEFAULT NULL,
+    last_name VARCHAR(80) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    contact_number VARCHAR(20) NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    dob DATE NOT NULL,
+    roll_number VARCHAR(80) NOT NULL UNIQUE,
+    course_program VARCHAR(100) NOT NULL,
+    current_semester_year VARCHAR(50) NOT NULL,
+    previous_cgpa DECIMAL(4,2) DEFAULT NULL,
+    examination_name VARCHAR(120) NOT NULL,
+    subjects TEXT NOT NULL,
+    exam_language ENUM('English', 'Hindi') NOT NULL,
+    id_proof_path VARCHAR(255) NOT NULL,
+    declaration_accepted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

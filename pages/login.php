@@ -3,6 +3,8 @@ require_once '../config/db.php';
 
 $error = '';
 $success = '';
+$prefillEmail = '';
+$rememberChecked = false;
 
 $roleConfig = [
     'student' => [
@@ -44,13 +46,13 @@ if (isset($_SESSION['admin_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $role = strtolower(trim($_POST['role'] ?? ''));
+    $role = strtolower(trim($_POST['role'] ?? 'student'));
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $rememberChecked = isset($_POST['remember_me']);
+    $prefillEmail = $email;
 
-    if (empty($role)) {
-        $error = 'Please select a role.';
-    } elseif (!isset($roleConfig[$role])) {
+    if (!isset($roleConfig[$role])) {
         $error = 'Please select a valid role.';
     } elseif (empty($email) || empty($password)) {
         $error = 'Please fill in all fields.';
@@ -69,11 +71,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$user || !password_verify($password, $user['password'])) {
                 $error = 'Invalid email or password.';
             } else {
+                session_regenerate_id(true);
                 $_SESSION[$config['id_session']] = (int) $user['id'];
                 $_SESSION[$config['name_session']] = $user['name'];
+                $_SESSION['session_last_regen'] = time();
+                $_SESSION['session_user_agent'] = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
 
                 if (!empty($config['email_session'])) {
                     $_SESSION[$config['email_session']] = $user['email'];
+                }
+
+                if ($rememberChecked) {
+                    setcookie('remember_student_email', $email, time() + (60 * 60 * 24 * 30), '/');
+                } else {
+                    setcookie('remember_student_email', '', time() - 3600, '/');
                 }
 
                 header('Location: ' . $config['redirect']);
@@ -84,13 +95,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_email'])) {
+    $prefillEmail = trim((string) $_COOKIE['remember_student_email']);
+    if ($prefillEmail !== '') {
+        $rememberChecked = true;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ExamPro</title>
+    <title>Student Login - ExamPro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -99,144 +117,183 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #EEF2FF 0%, #C7D2FE 50%, #E0E7FF 100%);
+            background: #cfd7ff;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            padding: 1.5rem;
         }
         .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(79, 70, 229, 0.15);
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #e8ebf6;
+            box-shadow: 0 22px 50px rgba(67, 56, 202, 0.15);
             width: 100%;
-            max-width: 440px;
-            padding: 3rem 2.5rem;
+            max-width: 520px;
+            padding: 2.8rem 2.7rem 2.6rem;
         }
         .login-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.15rem;
         }
         .login-header .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            font-size: 1.75rem;
+            gap: 0.6rem;
+            font-size: 2.15rem;
             font-weight: 700;
             margin-bottom: 0.75rem;
         }
-        .login-header .logo i { color: #4F46E5; font-size: 2rem; }
-        .logo-accent { color: #4F46E5; }
-        .login-header h2 { font-size: 1.5rem; color: #1E293B; margin-bottom: 0.25rem; }
-        .login-header p { color: #64748B; font-size: 0.9rem; }
+        .login-header .logo i { color: #4f46e5; font-size: 2.2rem; }
+        .logo-accent { color: #4f46e5; }
+        .login-header h2 { font-size: 2.65rem; color: #0f1d3a; margin-bottom: 0.45rem; font-weight: 700; }
+        .login-header p { color: #6b7280; font-size: 0.98rem; max-width: 330px; margin: 0 auto; line-height: 1.45; }
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
+        .row-inline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.7rem;
+            margin: 0.2rem 0 1.3rem;
+        }
+        .remember-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.92rem;
+            color: #4b5563;
+        }
+        .remember-wrap input {
+            width: 16px;
+            height: 16px;
+            accent-color: #4f46e5;
+        }
+        .forgot-link {
+            font-size: 0.9rem;
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .forgot-link:hover { text-decoration: underline; }
         .form-group label {
             display: block;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #1E293B;
-            margin-bottom: 0.4rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1f2d4b;
+            margin-bottom: 0.7rem;
         }
         .form-group .input-wrapper {
             position: relative;
         }
         .form-group .input-wrapper i {
             position: absolute;
-            left: 1rem;
+            left: 1.15rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #94A3B8;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            border: 2px solid #E2E8F0;
-            border-radius: 10px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            background: #F8FAFC;
+            color: #98a1b3;
+            font-size: 1rem;
         }
         .form-group input {
-            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            width: 100%;
+            border: 2px solid #e6eaf2;
+            border-radius: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
         }
-        .form-group select {
-            padding: 0.85rem 1rem;
+        .form-group input {
+            padding: 0.95rem 1rem 0.95rem 3rem;
         }
-        .form-group input:focus,
-        .form-group select:focus {
+        .form-group input:focus {
             outline: none;
-            border-color: #4F46E5;
+            border-color: #4f46e5;
             background: white;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
         }
         .btn-login {
             width: 100%;
-            padding: 0.9rem;
+            padding: 0.95rem;
             background: #4F46E5;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 14px;
             font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
+            font-size: 1.08rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 0.5rem;
-            min-height: 48px;
+            margin-top: 0.35rem;
+            min-height: 52px;
+            background: linear-gradient(90deg, #4f46e5 0%, #4338ca 100%);
         }
         .btn-login:hover {
-            background: #3730A3;
+            background: linear-gradient(90deg, #4338ca 0%, #3730a3 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.28);
         }
         .alert {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            margin-bottom: 1.1rem;
         }
         .alert-error {
-            background: #FEF2F2;
-            color: #DC2626;
-            border: 1px solid #FECACA;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
         }
         .alert-success {
-            background: #F0FDF4;
-            color: #16A34A;
-            border: 1px solid #BBF7D0;
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
         }
         .login-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: #64748B;
+            margin-top: 1.55rem;
+            font-size: 0.96rem;
+            color: #667085;
         }
         .login-footer a {
-            color: #4F46E5;
+            color: #4f46e5;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
         .login-footer a:hover { text-decoration: underline; }
         .back-home {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            color: #64748B;
+            gap: 0.45rem;
+            color: #4f46e5;
             text-decoration: none;
-            font-size: 0.85rem;
-            margin-top: 1rem;
+            font-size: 0.95rem;
+            margin-top: 0.95rem;
             transition: color 0.3s;
+            font-weight: 600;
         }
-        .back-home:hover { color: #4F46E5; }
-        @media (max-width: 480px) {
-            .login-container { padding: 2rem 1.5rem; }
-            .login-header .logo { font-size: 1.5rem; }
-            .login-header h2 { font-size: 1.25rem; }
+        .back-home:hover { color: #3730a3; }
+
+        @media (max-width: 900px) {
+            .login-container {
+                max-width: 520px;
+                padding: 2.2rem 1.6rem 2.1rem;
+            }
+            .login-header .logo { font-size: 1.9rem; }
+            .login-header .logo i { font-size: 1.6rem; }
+            .login-header h2 { font-size: 2rem; }
+            .login-header p { font-size: 0.95rem; }
+            .form-group label { font-size: 1.03rem; }
+            .login-footer { font-size: 0.92rem; }
+            .back-home { font-size: 0.9rem; }
+            .row-inline {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -247,8 +304,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-graduation-cap"></i>
                 <span>Exam<span class="logo-accent">Pro</span></span>
             </div>
-            <h2>Login</h2>
-            <p>Enter your credentials to access your panel</p>
+            <h2>Student Login</h2>
+            <p>Enter your credentials to access the student panel</p>
         </div>
 
         <?php if ($error): ?>
@@ -260,20 +317,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
-            <div class="form-group">
-                <label for="role">Select Role</label>
-                <select id="role" name="role" required>
-                    <option value="">Select Role</option>
-                    <option value="student" <?= (($_POST['role'] ?? '') === 'student') ? 'selected' : '' ?>>Student</option>
-                    <option value="teacher" <?= (($_POST['role'] ?? '') === 'teacher') ? 'selected' : '' ?>>Teacher</option>
-                    <option value="admin" <?= (($_POST['role'] ?? '') === 'admin') ? 'selected' : '' ?>>Admin</option>
-                </select>
-            </div>
+            <input type="hidden" name="role" value="student">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <div class="input-wrapper">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="email" name="email" placeholder="your@email.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                    <input type="email" id="email" name="email" placeholder="your@email.com" value="<?= htmlspecialchars($prefillEmail) ?>" required>
                 </div>
             </div>
             <div class="form-group">
@@ -282,6 +331,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
+            </div>
+            <div class="row-inline">
+                <label class="remember-wrap" for="remember_me">
+                    <input type="checkbox" id="remember_me" name="remember_me" value="1" <?= $rememberChecked ? 'checked' : '' ?>>
+                    <span>Remember me</span>
+                </label>
+                <a href="forgot-password.php" class="forgot-link">Forgot Password?</a>
             </div>
             <button type="submit" class="btn-login">
                 <i class="fas fa-sign-in-alt"></i> Login

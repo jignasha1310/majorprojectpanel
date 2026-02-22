@@ -29,6 +29,18 @@ function adminEnsureSchema(mysqli $conn): void
     );
 
     $conn->query(
+        "CREATE TABLE IF NOT EXISTS students (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL UNIQUE,
+            roll_number VARCHAR(50) NOT NULL,
+            department VARCHAR(50) DEFAULT 'BCA',
+            password VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
+
+    $conn->query(
         "CREATE TABLE IF NOT EXISTS exams (
             id INT AUTO_INCREMENT PRIMARY KEY,
             teacher_id INT NULL,
@@ -41,6 +53,18 @@ function adminEnsureSchema(mysqli $conn): void
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             exam_date DATE NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
+
+    $conn->query(
+        "CREATE TABLE IF NOT EXISTS student_exams (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            student_id INT NOT NULL,
+            exam_id INT NOT NULL,
+            score INT DEFAULT 0,
+            total INT DEFAULT 0,
+            percentage DECIMAL(5,2) DEFAULT 0.00,
+            submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
 

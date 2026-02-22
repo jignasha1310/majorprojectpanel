@@ -2,33 +2,33 @@
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/layout.php';
 
-$teacherId = (int) $_SESSION['teacher_id'];
+function teacherCount(mysqli $conn, string $sql): int
+{
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return 0;
+    }
+    $stmt->execute();
+    $value = (int) ($stmt->get_result()->fetch_assoc()['total'] ?? 0);
+    $stmt->close();
+    return $value;
+}
 
-$countStmt = $conn->prepare('SELECT COUNT(*) AS total FROM exams WHERE teacher_id = ? OR teacher_id IS NULL');
-$countStmt->bind_param('i', $teacherId);
-$countStmt->execute();
-$totalExams = (int) ($countStmt->get_result()->fetch_assoc()['total'] ?? 0);
-$countStmt->close();
+$statsCards = [
+    ['title' => 'Students', 'icon' => 'bi-people-fill', 'bg' => 'bg-primary', 'value' => teacherCount($conn, 'SELECT COUNT(*) AS total FROM students')],
+    ['title' => 'Classes', 'icon' => 'bi-journal-bookmark-fill', 'bg' => 'bg-warning', 'value' => teacherCount($conn, 'SELECT COUNT(DISTINCT department) AS total FROM students')],
+    ['title' => 'Exams', 'icon' => 'bi-card-checklist', 'bg' => 'bg-success', 'value' => teacherCount($conn, 'SELECT COUNT(*) AS total FROM exams')],
+    ['title' => 'Results', 'icon' => 'bi-bar-chart-fill', 'bg' => 'bg-danger', 'value' => teacherCount($conn, 'SELECT COUNT(*) AS total FROM student_exams')],
+];
 
-$activeStmt = $conn->prepare("SELECT COUNT(*) AS total FROM exams WHERE (teacher_id = ? OR teacher_id IS NULL) AND is_active = 1");
-$activeStmt->bind_param('i', $teacherId);
-$activeStmt->execute();
-$activeExams = (int) ($activeStmt->get_result()->fetch_assoc()['total'] ?? 0);
-$activeStmt->close();
+$recentStmt = $conn->prepare('SELECT id, name, roll_number, department, email FROM students ORDER BY id DESC LIMIT ?');
+$limit = 8;
+$recentStmt->bind_param('i', $limit);
+$recentStmt->execute();
+$recentStudents = $recentStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$recentStmt->close();
 
-$questionStmt = $conn->prepare('SELECT COUNT(*) AS total FROM questions q JOIN exams e ON e.id = q.exam_id WHERE e.teacher_id = ? OR e.teacher_id IS NULL');
-$questionStmt->bind_param('i', $teacherId);
-$questionStmt->execute();
-$totalQuestions = (int) ($questionStmt->get_result()->fetch_assoc()['total'] ?? 0);
-$questionStmt->close();
-
-$listStmt = $conn->prepare('SELECT id, title, semester, total_questions, duration_minutes, exam_date, status, is_active FROM exams WHERE teacher_id = ? OR teacher_id IS NULL ORDER BY exam_date ASC LIMIT 5');
-$listStmt->bind_param('i', $teacherId);
-$listStmt->execute();
-$upcomingExams = $listStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$listStmt->close();
-
-teacherRenderHeader('Exam Scheduler', 'dashboard');
+teacherRenderHeader('Teacher Dashboard', 'dashboard');
 ?>
 
 <?php if ($flash = teacherFlash('success')): ?>
@@ -36,73 +36,57 @@ teacherRenderHeader('Exam Scheduler', 'dashboard');
 <?php endif; ?>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon"><i class="bi bi-calendar-week"></i></div>
-                <div>
-                    <div class="display-6 fw-bold text-primary mb-0"><?= $totalExams ?></div>
-                    <div class="text-secondary">Total Exams</div>
+    <?php foreach ($statsCards as $card): ?>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100 border-0 overflow-hidden <?= $card['bg'] ?> text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <h3 class="h5 fw-semibold mb-0"><?= htmlspecialchars($card['title']) ?></h3>
+                        <i class="bi <?= htmlspecialchars($card['icon']) ?> fs-4"></i>
+                    </div>
+                    <div class="h2 fw-bold mb-2"><?= (int) $card['value'] ?></div>
+                    <a href="#" class="small text-white text-decoration-none d-inline-flex align-items-center gap-2 opacity-75">
+                        <span>View Details</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon"><i class="bi bi-play-circle"></i></div>
-                <div>
-                    <div class="display-6 fw-bold text-primary mb-0"><?= $activeExams ?></div>
-                    <div class="text-secondary">Active Exams</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="stat-icon"><i class="bi bi-journal-check"></i></div>
-                <div>
-                    <div class="display-6 fw-bold text-primary mb-0"><?= $totalQuestions ?></div>
-                    <div class="text-secondary">Total MCQ Questions</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h3 fw-semibold mb-0">Upcoming and Active Exams</h2>
-    <a href="exams.php" class="btn btn-indigo"><i class="bi bi-plus-circle me-1"></i> Schedule New Exam</a>
-</div>
+<h2 class="h4 fw-semibold mb-3">Recently Registered Students</h2>
 
 <div class="card content-card">
     <div class="card-body">
-        <?php if (empty($upcomingExams)): ?>
-            <p class="text-secondary mb-0">No exams found. Create your first exam.</p>
-        <?php else: ?>
-            <div class="d-flex flex-column gap-3">
-                <?php foreach ($upcomingExams as $exam): ?>
-                    <?php
-                    $dateObj = new DateTime($exam['exam_date']);
-                    $statusText = $exam['is_active'] ? 'Active' : 'Inactive';
-                    $statusClass = $exam['is_active'] ? 'success' : 'secondary';
-                    ?>
-                    <div class="exam-row d-flex flex-column flex-md-row align-items-md-center gap-3">
-                        <div class="exam-date">
-                            <div><?= $dateObj->format('d') ?></div>
-                            <small><?= strtoupper($dateObj->format('M')) ?></small>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h3 class="h4 mb-1"><?= htmlspecialchars($exam['title']) ?></h3>
-                            <p class="text-secondary mb-0"><?= htmlspecialchars($exam['semester']) ?> | <?= (int) $exam['total_questions'] ?> Questions | <?= (int) $exam['duration_minutes'] ?> mins</p>
-                        </div>
-                        <span class="badge text-bg-<?= $statusClass ?> px-3 py-2"><?= $statusText ?></span>
-                        <a href="questions.php?exam_id=<?= (int) $exam['id'] ?>" class="btn btn-outline-primary btn-sm">Manage Questions</a>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Roll No</th>
+                    <th>Class</th>
+                    <th>Username</th>
+                    <th>Profile</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($recentStudents)): ?>
+                    <tr><td colspan="5" class="text-center text-secondary">No students found.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($recentStudents as $student): ?>
+                        <tr>
+                            <td><?= htmlspecialchars((string) $student['name']) ?></td>
+                            <td><?= htmlspecialchars((string) $student['roll_number']) ?></td>
+                            <td><?= htmlspecialchars((string) $student['department']) ?></td>
+                            <td><?= htmlspecialchars(strstr((string) $student['email'], '@', true) ?: (string) $student['email']) ?></td>
+                            <td><a href="#" class="text-decoration-none">Visit</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

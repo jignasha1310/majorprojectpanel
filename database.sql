@@ -8,37 +8,38 @@ USE exampro_db;
 CREATE TABLE IF NOT EXISTS students (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(80) DEFAULT NULL,
+    last_name VARCHAR(80) DEFAULT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(20) DEFAULT NULL,
+    profile_image VARCHAR(255) DEFAULT NULL,
     roll_number VARCHAR(50) NOT NULL,
     department VARCHAR(50) DEFAULT 'BCA',
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Extended student profile/registration data
-CREATE TABLE IF NOT EXISTS student_profiles (
+-- Multi-step registration storage table
+CREATE TABLE IF NOT EXISTS student_registrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL UNIQUE,
-    first_name VARCHAR(60) NOT NULL,
-    last_name VARCHAR(60) NOT NULL,
-    dob DATE NOT NULL,
+    first_name VARCHAR(80) NOT NULL,
+    middle_name VARCHAR(80) DEFAULT NULL,
+    last_name VARCHAR(80) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    contact_number VARCHAR(20) NOT NULL,
     gender ENUM('Male', 'Female', 'Other') NOT NULL,
-    address TEXT NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    zip_code VARCHAR(12) NOT NULL,
-    mobile_country_code VARCHAR(8) NOT NULL,
-    mobile_number VARCHAR(20) NOT NULL,
-    photo_path VARCHAR(255) NOT NULL,
-    signature_path VARCHAR(255) NOT NULL,
-    branch VARCHAR(100) NOT NULL,
-    course_program VARCHAR(120) NOT NULL,
-    current_semester VARCHAR(40) NOT NULL,
-    selected_subjects TEXT NOT NULL,
-    exam_medium VARCHAR(40) NOT NULL,
-    marksheet_path VARCHAR(255) DEFAULT NULL,
-    terms_accepted TINYINT(1) NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+    dob DATE NOT NULL,
+    roll_number VARCHAR(80) NOT NULL UNIQUE,
+    course_program VARCHAR(100) NOT NULL,
+    current_semester_year VARCHAR(50) NOT NULL,
+    previous_cgpa DECIMAL(4,2) DEFAULT NULL,
+    examination_name VARCHAR(120) NOT NULL,
+    subjects TEXT NOT NULL,
+    exam_language ENUM('English', 'Hindi') NOT NULL,
+    id_proof_path VARCHAR(255) NOT NULL,
+    declaration_accepted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Teachers table
@@ -116,9 +117,9 @@ CREATE TABLE IF NOT EXISTS student_answers (
 -- =====================
 
 -- Sample students (password: student123)
-INSERT INTO students (name, email, roll_number, department, password) VALUES
-('Rahul Sharma', 'rahul@student.com', 'BCA/2024/001', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Priya Patel', 'priya@student.com', 'BCA/2024/002', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+INSERT INTO students (name, first_name, last_name, email, phone, roll_number, department, password) VALUES
+('Rahul Sharma', 'Rahul', 'Sharma', 'rahul@student.com', '+91 9876543210', 'BCA/2024/001', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Priya Patel', 'Priya', 'Patel', 'priya@student.com', '+91 9123456789', 'BCA/2024/002', 'BCA', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 -- Default teacher login (password: teacher123)
 INSERT INTO teachers (name, email, password) VALUES
