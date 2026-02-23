@@ -91,17 +91,19 @@ adminRenderHeader('Teachers', 'teachers');
                     <th>Name</th>
                     <th>Email</th>
                     <th>Created</th>
+                    <th>Profile</th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php if (empty($teachers)): ?>
-                    <tr><td colspan="3" class="text-center text-secondary">No teachers found.</td></tr>
+                    <tr><td colspan="4" class="text-center text-secondary">No teachers found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($teachers as $teacher): ?>
                         <tr>
                             <td><?= htmlspecialchars((string) $teacher['name']) ?></td>
                             <td><?= htmlspecialchars((string) $teacher['email']) ?></td>
                             <td><?= htmlspecialchars((string) $teacher['created_at']) ?></td>
+                            <td><a href="teacher-profile.php?teacher_id=<?= (int) $teacher['id'] ?>" class="text-decoration-none">Visit</a></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

@@ -81,6 +81,12 @@ if ($just_submitted && $submitted_exam_id > 0) {
             </div>
         </header>
         <div class="dashboard-content">
+            <?php if (!empty($_SESSION['student_flash_error'])): ?>
+                <div class="score-banner" style="background: #fee2e2; color: #991b1b;">
+                    <h2><i class="fas fa-exclamation-triangle"></i> <?= htmlspecialchars((string) $_SESSION['student_flash_error']) ?></h2>
+                </div>
+                <?php unset($_SESSION['student_flash_error']); ?>
+            <?php endif; ?>
             <?php if ($submitted_result): ?>
                 <div class="score-banner">
                     <h2><i class="fas fa-check-circle"></i> Exam Submitted Successfully!</h2>
@@ -121,6 +127,7 @@ if ($just_submitted && $submitted_exam_id > 0) {
                                     <span class="result-pass"><?= $r['score'] ?>/<?= $r['total'] ?></span>
                                     <span class="result-avg"><?= $r['percentage'] ?>%</span>
                                     <a href="review-answers.php?se_id=<?= $r['id'] ?>" class="btn-small">Review Answers</a>
+                                    <a href="result-export.php?se_id=<?= $r['id'] ?>" class="btn-small" style="background:#16a34a;">Download PDF</a>
                                 </div>
                             </div>
                         <?php endwhile; ?>

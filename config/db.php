@@ -112,6 +112,7 @@ function ensure_student_profile_columns(mysqli $conn): void
         'phone' => "ALTER TABLE students ADD COLUMN phone VARCHAR(20) NULL AFTER email",
         'profile_image' => "ALTER TABLE students ADD COLUMN profile_image VARCHAR(255) NULL AFTER phone",
         'updated_at' => "ALTER TABLE students ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at",
+        'class_id' => "ALTER TABLE students ADD COLUMN class_id INT NULL AFTER department",
     ];
 
     foreach ($requiredColumns as $column => $alterSql) {
@@ -136,4 +137,39 @@ function ensure_student_profile_columns(mysqli $conn): void
 }
 
 ensure_student_profile_columns($conn);
+
+function ensure_classes_schema(mysqli $conn): void
+{
+    $conn->query(
+        "CREATE TABLE IF NOT EXISTS classes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE,
+            teacher_id INT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
+
+    $columns = [
+        'class_id' => "ALTER TABLE exams ADD COLUMN class_id INT NULL AFTER teacher_id",
+    ];
+
+    foreach ($columns as $column => $alterSql) {
+        $check = $conn->prepare('SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1');
+        if (!$check) {
+            continue;
+        }
+        $tableName = 'exams';
+        $check->bind_param('ss', $tableName, $column);
+        $check->execute();
+        $exists = $check->get_result()->num_rows > 0;
+        $check->close();
+
+        if (!$exists) {
+            $conn->query($alterSql);
+        }
+    }
+}
+
+ensure_classes_schema($conn);
 ?>

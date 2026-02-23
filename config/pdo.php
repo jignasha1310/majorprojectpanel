@@ -17,4 +17,3 @@ $pdo = new PDO(
         PDO::ATTR_EMULATE_PREPARES => false,
     ]
 );
-

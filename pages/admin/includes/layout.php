@@ -8,6 +8,8 @@ function adminRenderHeader(string $title, string $activeNav): void
     $isTeacherRequests = $activeNav === 'teacher_requests';
     $isExams = $activeNav === 'exams';
     $isResults = $activeNav === 'results';
+    $isClasses = $activeNav === 'classes';
+    $isReports = $activeNav === 'reports';
     ?>
     <!doctype html>
     <html lang="en">
@@ -50,10 +52,10 @@ function adminRenderHeader(string $title, string $activeNav): void
                     <a class="sidebar-link nav-link <?= $isResults ? 'active' : '' ?>" href="results.php">
                         <i class="fa-solid fa-square-poll-vertical me-2"></i> Results
                     </a>
-                    <a class="sidebar-link nav-link" href="#">
+                    <a class="sidebar-link nav-link <?= $isClasses ? 'active' : '' ?>" href="classes.php">
                         <i class="fa-solid fa-building-columns me-2"></i> Classes
                     </a>
-                    <a class="sidebar-link nav-link" href="#">
+                    <a class="sidebar-link nav-link <?= $isReports ? 'active' : '' ?>" href="reports.php">
                         <i class="fa-solid fa-chart-line me-2"></i> Reports
                     </a>
                     <a class="sidebar-link nav-link" href="logout.php">

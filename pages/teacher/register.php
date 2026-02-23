@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
     $csrf = (string) ($_POST['csrf_token'] ?? '');
 
-    if (!teacherModuleVerifyCsrf($csrf)) {
+    if (!teacherModuleVerifyCsrf($csrf, 'teacher_register_csrf')) {
         $errors[] = 'Invalid CSRF token. Please refresh and try again.';
     } elseif ($action === 'step1') {
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));

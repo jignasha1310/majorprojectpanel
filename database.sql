@@ -4,6 +4,14 @@
 CREATE DATABASE IF NOT EXISTS exampro_db;
 USE exampro_db;
 
+-- Classes table
+CREATE TABLE IF NOT EXISTS classes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    teacher_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Students table
 CREATE TABLE IF NOT EXISTS students (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -15,9 +23,11 @@ CREATE TABLE IF NOT EXISTS students (
     profile_image VARCHAR(255) DEFAULT NULL,
     roll_number VARCHAR(50) NOT NULL,
     department VARCHAR(50) DEFAULT 'BCA',
+    class_id INT NULL,
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
 );
 
 -- Multi-step registration storage table
@@ -96,6 +106,7 @@ CREATE TABLE IF NOT EXISTS admins (
 CREATE TABLE IF NOT EXISTS exams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     teacher_id INT NULL,
+    class_id INT NULL,
     title VARCHAR(200) NOT NULL,
     subject VARCHAR(100) NOT NULL,
     semester VARCHAR(50) DEFAULT 'Semester 2',
@@ -105,7 +116,8 @@ CREATE TABLE IF NOT EXISTS exams (
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     exam_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE SET NULL
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE SET NULL,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
 );
 
 -- Questions table

@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rollNumber = trim($_POST['roll_number'] ?? '');
     $department = trim($_POST['department'] ?? '');
     $password = $_POST['password'] ?? '';
+    $classIdInput = (int) ($_POST['class_id'] ?? 0);
 
     if ($name === '' || $email === '' || $rollNumber === '' || $department === '' || $password === '') {
         adminFlash('error', 'All student fields are required.');
@@ -24,8 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         adminFlash('error', 'Password must be at least 8 characters.');
     } else {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare('INSERT INTO students (name, email, roll_number, department, password) VALUES (?, ?, ?, ?, ?)');
-        $stmt->bind_param('sssss', $name, $email, $rollNumber, $department, $hashedPassword);
+        $stmt = $conn->prepare('INSERT INTO students (name, email, roll_number, department, class_id, password) VALUES (?, ?, ?, ?, ?, ?)');
+        $classIdValue = $classIdInput > 0 ? $classIdInput : null;
+        $stmt->bind_param('ssssis', $name, $email, $rollNumber, $department, $classIdValue, $hashedPassword);
 
         if ($stmt->execute()) {
             adminFlash('success', 'Student added successfully.');
@@ -42,9 +44,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$listStmt = $conn->prepare('SELECT id, name, email, roll_number, department, created_at FROM students ORDER BY id DESC LIMIT ?');
+$classId = (int) ($_GET['class_id'] ?? 0);
+
+$classes = [];
+$classStmt = $conn->prepare('SELECT id, name FROM classes ORDER BY name');
+if ($classStmt && $classStmt->execute()) {
+    $classes = $classStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+$classStmt?->close();
+
+$listSql = 'SELECT s.id, s.name, s.email, s.roll_number, COALESCE(c.name, s.department) AS class_name, s.created_at FROM students s LEFT JOIN classes c ON c.id = s.class_id';
+$params = [];
+$types = '';
+if ($classId > 0) {
+    $listSql .= ' WHERE s.class_id = ?';
+    $params[] = $classId;
+    $types .= 'i';
+}
+$listSql .= ' ORDER BY s.id DESC LIMIT ?';
 $limit = 20;
-$listStmt->bind_param('i', $limit);
+$params[] = $limit;
+$types .= 'i';
+
+$listStmt = $conn->prepare($listSql);
+if ($types !== '') {
+    $bind = [$types];
+    foreach ($params as $i => $value) {
+        $bind[] = &$params[$i];
+    }
+    call_user_func_array([$listStmt, 'bind_param'], $bind);
+}
 $listStmt->execute();
 $students = $listStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $listStmt->close();
@@ -81,6 +110,15 @@ adminRenderHeader('Students', 'students');
                 <input type="text" name="department" class="form-control" required>
             </div>
             <div class="col-md-4">
+                <label class="form-label">Class (Optional)</label>
+                <select name="class_id" class="form-select">
+                    <option value="0">Select</option>
+                    <?php foreach ($classes as $class): ?>
+                        <option value="<?= (int) $class['id'] ?>"><?= htmlspecialchars((string) $class['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-4">
                 <label class="form-label">Password</label>
                 <input type="password" name="password" class="form-control" minlength="8" required>
             </div>
@@ -93,7 +131,20 @@ adminRenderHeader('Students', 'students');
 
 <div class="card content-card">
     <div class="card-body">
-        <h2 class="h4 mb-3">Students List</h2>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h2 class="h4 mb-0">Students List</h2>
+            <form method="get" class="d-flex gap-2">
+                <select name="class_id" class="form-select form-select-sm">
+                    <option value="0">All Classes</option>
+                    <?php foreach ($classes as $class): ?>
+                        <option value="<?= (int) $class['id'] ?>" <?= $classId === (int) $class['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars((string) $class['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
+            </form>
+        </div>
         <div class="table-responsive table-shell">
             <table class="table align-middle mb-0">
                 <thead>
@@ -114,7 +165,7 @@ adminRenderHeader('Students', 'students');
                             <td><?= htmlspecialchars((string) $student['name']) ?></td>
                             <td><?= htmlspecialchars((string) $student['email']) ?></td>
                             <td><?= htmlspecialchars((string) $student['roll_number']) ?></td>
-                            <td><?= htmlspecialchars((string) $student['department']) ?></td>
+                            <td><?= htmlspecialchars((string) $student['class_name']) ?></td>
                             <td><?= htmlspecialchars((string) $student['created_at']) ?></td>
                         </tr>
                     <?php endforeach; ?>
