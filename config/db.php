@@ -138,6 +138,76 @@ function ensure_student_profile_columns(mysqli $conn): void
 
 ensure_student_profile_columns($conn);
 
+function sync_registration_students(mysqli $conn): void
+{
+    $tableCheck = $conn->query("SHOW TABLES LIKE 'student_registrations'");
+    if (!$tableCheck || $tableCheck->num_rows === 0) {
+        return;
+    }
+
+    $missingResult = $conn->query(
+        "SELECT
+            r.first_name,
+            r.last_name,
+            r.email,
+            r.contact_number,
+            r.roll_number,
+            r.course_program
+         FROM student_registrations r
+         LEFT JOIN students s ON s.email = r.email OR s.roll_number = r.roll_number
+         WHERE s.id IS NULL"
+    );
+
+    if (!$missingResult || $missingResult->num_rows === 0) {
+        return;
+    }
+
+    $defaultPasswordHash = password_hash('student123', PASSWORD_DEFAULT);
+    if ($defaultPasswordHash === false) {
+        return;
+    }
+
+    $insert = $conn->prepare(
+        'INSERT INTO students (name, first_name, last_name, email, phone, roll_number, department, password)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+
+    if (!$insert) {
+        return;
+    }
+
+    while ($row = $missingResult->fetch_assoc()) {
+        $firstName = trim((string) ($row['first_name'] ?? ''));
+        $lastName = trim((string) ($row['last_name'] ?? ''));
+        $name = trim($firstName . ' ' . $lastName);
+        $email = trim((string) ($row['email'] ?? ''));
+        $phone = trim((string) ($row['contact_number'] ?? ''));
+        $rollNumber = trim((string) ($row['roll_number'] ?? ''));
+        $department = trim((string) ($row['course_program'] ?? ''));
+
+        if ($name === '' || $email === '' || $rollNumber === '') {
+            continue;
+        }
+
+        $insert->bind_param(
+            'ssssssss',
+            $name,
+            $firstName,
+            $lastName,
+            $email,
+            $phone,
+            $rollNumber,
+            $department,
+            $defaultPasswordHash
+        );
+        $insert->execute();
+    }
+
+    $insert->close();
+}
+
+sync_registration_students($conn);
+
 function ensure_classes_schema(mysqli $conn): void
 {
     $conn->query(

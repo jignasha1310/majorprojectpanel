@@ -44,21 +44,32 @@ function ensure_registration_table(mysqli $conn): void
 
 function email_or_roll_exists(mysqli $conn, string $email, string $rollNumber): bool
 {
-    $checkStmt = $conn->prepare('SELECT id FROM student_registrations WHERE email = ? OR roll_number = ? LIMIT 1');
-    if (!$checkStmt) {
-        json_response(500, false, 'Failed to prepare duplicate check query: ' . mysqli_error($conn));
-    }
+    $queries = [
+        'SELECT id FROM student_registrations WHERE email = ? OR roll_number = ? LIMIT 1',
+        'SELECT id FROM students WHERE email = ? OR roll_number = ? LIMIT 1',
+    ];
 
-    $checkStmt->bind_param('ss', $email, $rollNumber);
-    if (!$checkStmt->execute()) {
+    foreach ($queries as $sql) {
+        $checkStmt = $conn->prepare($sql);
+        if (!$checkStmt) {
+            json_response(500, false, 'Failed to prepare duplicate check query: ' . mysqli_error($conn));
+        }
+
+        $checkStmt->bind_param('ss', $email, $rollNumber);
+        if (!$checkStmt->execute()) {
+            $checkStmt->close();
+            json_response(500, false, 'Failed to run duplicate check query: ' . mysqli_error($conn));
+        }
+
+        $result = $checkStmt->get_result();
+        $exists = $result && $result->num_rows > 0;
         $checkStmt->close();
-        json_response(500, false, 'Failed to run duplicate check query: ' . mysqli_error($conn));
+        if ($exists) {
+            return true;
+        }
     }
 
-    $result = $checkStmt->get_result();
-    $exists = $result && $result->num_rows > 0;
-    $checkStmt->close();
-    return $exists;
+    return false;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -69,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'lastName',
         'email',
         'contact',
+        'password',
+        'confirmPassword',
         'gender',
         'dob',
         'rollNumber',
@@ -90,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $lastName = trim((string) ($_POST['lastName'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));
     $contact = trim((string) ($_POST['contact'] ?? ''));
+    $password = (string) ($_POST['password'] ?? '');
+    $confirmPassword = (string) ($_POST['confirmPassword'] ?? '');
     $gender = trim((string) ($_POST['gender'] ?? ''));
     $dob = trim((string) ($_POST['dob'] ?? ''));
     $rollNumber = trim((string) ($_POST['rollNumber'] ?? ''));
@@ -101,6 +116,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subjects = $_POST['subjects'] ?? [];
     $declaration = isset($_POST['declaration']) ? 1 : 0;
 
+    if (!preg_match('/^[a-zA-Z][a-zA-Z\s]{1,79}$/', $firstName)) {
+        $errors[] = 'First name must contain only letters and spaces.';
+    }
+
+    if ($middleName !== '' && !preg_match('/^[a-zA-Z][a-zA-Z\s]{0,79}$/', $middleName)) {
+        $errors[] = 'Middle name must contain only letters and spaces.';
+    }
+
+    if (!preg_match('/^[a-zA-Z][a-zA-Z\s]{1,79}$/', $lastName)) {
+        $errors[] = 'Last name must contain only letters and spaces.';
+    }
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Invalid email format.';
     }
@@ -109,12 +136,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Invalid contact number format.';
     }
 
+    if (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters.';
+    }
+
+    if (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+        $errors[] = 'Password must contain at least one letter and one number.';
+    }
+
+    if (!hash_equals($password, $confirmPassword)) {
+        $errors[] = 'Password and confirm password do not match.';
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9\/\-_]{4,80}$/', $rollNumber)) {
+        $errors[] = 'Roll number format is invalid.';
+    }
+
     if (!in_array($gender, ['Male', 'Female', 'Other'], true)) {
         $errors[] = 'Invalid gender selected.';
     }
 
     if (!in_array($examLanguage, ['English', 'Hindi'], true)) {
         $errors[] = 'Invalid exam language selected.';
+    }
+
+    $dobTimestamp = strtotime($dob);
+    if ($dobTimestamp === false) {
+        $errors[] = 'Date of birth is invalid.';
+    } else {
+        $today = new DateTimeImmutable('today');
+        $birthDate = (new DateTimeImmutable())->setTimestamp($dobTimestamp);
+        if ($birthDate > $today) {
+            $errors[] = 'Date of birth cannot be in the future.';
+        } else {
+            $age = (int) $birthDate->diff($today)->y;
+            if ($age < 12) {
+                $errors[] = 'Minimum age for registration is 12 years.';
+            }
+        }
     }
 
     if (!is_array($subjects) || count($subjects) === 0) {
@@ -200,11 +259,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_response(500, false, 'Failed to store uploaded ID proof.');
     }
 
-    $subjectsCsv = implode(',', array_map(static function ($subject): string {
+    $allowedSubjects = ['Mathematics', 'Physics', 'Chemistry', 'Computer Science', 'English', 'Economics'];
+    $cleanSubjects = array_values(array_unique(array_filter(array_map(static function ($subject): string {
         return trim((string) $subject);
-    }, $subjects));
+    }, is_array($subjects) ? $subjects : []))));
+    foreach ($cleanSubjects as $subject) {
+        if (!in_array($subject, $allowedSubjects, true)) {
+            json_response(422, false, 'Validation failed.', ['errors' => ['Invalid subject selected.']]);
+        }
+    }
+    if ($cleanSubjects === []) {
+        json_response(422, false, 'Validation failed.', ['errors' => ['At least one subject is required.']]);
+    }
+    $subjectsCsv = implode(',', $cleanSubjects);
 
-    $stmt = $conn->prepare('INSERT INTO student_registrations (
+    $registrationStmt = $conn->prepare('INSERT INTO student_registrations (
         first_name,
         middle_name,
         last_name,
@@ -223,7 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         declaration_accepted
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
-    if (!$stmt) {
+    if (!$registrationStmt) {
         if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
             @unlink($uploadTargetPath);
         }
@@ -233,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $middleNameOrNull = $middleName !== '' ? $middleName : null;
     $cgpaOrNull = $cgpa;
 
-    $stmt->bind_param(
+    $registrationStmt->bind_param(
         'ssssssssssdssssi',
         $firstName,
         $middleNameOrNull,
@@ -253,19 +322,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $declaration
     );
 
-    if (!$stmt->execute()) {
+    $fullName = trim($firstName . ' ' . $lastName);
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $studentStmt = $conn->prepare('INSERT INTO students (
+        name,
+        first_name,
+        last_name,
+        email,
+        phone,
+        roll_number,
+        department,
+        password
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+
+    if (!$studentStmt || $hashedPassword === false) {
+        if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
+            @unlink($uploadTargetPath);
+        }
+        if ($registrationStmt) {
+            $registrationStmt->close();
+        }
+        if ($studentStmt) {
+            $studentStmt->close();
+        }
+        json_response(500, false, 'Failed to prepare student account query.');
+    }
+
+    $studentStmt->bind_param(
+        'ssssssss',
+        $fullName,
+        $firstName,
+        $lastName,
+        $email,
+        $contact,
+        $rollNumber,
+        $courseProgram,
+        $hashedPassword
+    );
+
+    $conn->begin_transaction();
+    $registrationSaved = $registrationStmt->execute();
+    $studentSaved = $registrationSaved ? $studentStmt->execute() : false;
+
+    if (!$registrationSaved || !$studentSaved) {
+        $conn->rollback();
         if ($uploadTargetPath !== '' && is_file($uploadTargetPath)) {
             @unlink($uploadTargetPath);
         }
 
-        if ((int) $stmt->errno === 1062) {
+        $registrationErrno = (int) $registrationStmt->errno;
+        $studentErrno = (int) $studentStmt->errno;
+        $registrationStmt->close();
+        $studentStmt->close();
+
+        if ($registrationErrno === 1062 || $studentErrno === 1062) {
             json_response(409, false, 'Email or roll number already exists.');
         }
 
         json_response(500, false, 'Registration failed: ' . mysqli_error($conn));
     }
 
-    json_response(201, true, 'Registration completed successfully.');
+    $conn->commit();
+    $registrationStmt->close();
+    $studentStmt->close();
+    json_response(201, true, 'Registration completed successfully. You can now login.');
 }
 ?>
 <!DOCTYPE html>
@@ -302,9 +422,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 transform: translateY(0);
             }
         }
+
+        .popup {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            min-width: 260px;
+            max-width: 420px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .popup.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .popup.success { background: #059669; }
+        .popup.error { background: #dc2626; }
     </style>
 </head>
 <body class="font-sans p-4 sm:p-6">
+    <div id="popupMessage" class="popup" role="alert" aria-live="polite"></div>
     <main class="mx-auto w-full max-w-4xl">
         <section class="rounded-2xl bg-white/95 shadow-xl shadow-slate-200/60 backdrop-blur-sm border border-slate-200">
             <div class="px-5 pt-6 pb-4 sm:px-8 sm:pt-8">
@@ -359,6 +507,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div>
                             <label for="contact" class="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
                             <input id="contact" name="contact" type="tel" required pattern="^[0-9+\-()\s]{7,15}$" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="e.g. +91 9876543210">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <input id="password" name="password" type="password" required minlength="8" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Min 8 chars, letter + number">
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                            <input id="confirmPassword" name="confirmPassword" type="password" required minlength="8" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Re-enter password">
                         </div>
                     </div>
 
@@ -497,10 +656,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const stepIndicators = Array.from(document.querySelectorAll('.step-indicator'));
             const globalError = document.getElementById('globalError');
             const globalSuccess = document.getElementById('globalSuccess');
+            const popup = document.getElementById('popupMessage');
             let currentStep = 1;
+            let popupTimer;
 
             const stepFields = {
-                1: ['firstName', 'lastName', 'email', 'contact', 'gender', 'dob'],
+                1: ['firstName', 'lastName', 'email', 'contact', 'password', 'confirmPassword', 'gender', 'dob'],
                 2: ['rollNumber', 'courseProgram', 'semesterYear'],
                 3: ['examName', 'idProof', 'declaration']
             };
@@ -510,6 +671,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 globalSuccess.classList.add('hidden');
                 globalError.textContent = '';
                 globalSuccess.textContent = '';
+            }
+
+            function showPopup(type, message) {
+                if (!popup || !message) return;
+                popup.className = `popup ${type}`;
+                popup.textContent = message;
+                popup.classList.add('show');
+                if (popupTimer) clearTimeout(popupTimer);
+                popupTimer = setTimeout(() => popup.classList.remove('show'), 2600);
             }
 
             function updateTracker() {
@@ -560,11 +730,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if (step === 1) {
+                    const passwordField = document.getElementById('password');
+                    const confirmPasswordField = document.getElementById('confirmPassword');
+                    const passwordValue = passwordField ? passwordField.value : '';
+                    const confirmValue = confirmPasswordField ? confirmPasswordField.value : '';
+
+                    if (!/[A-Za-z]/.test(passwordValue) || !/[0-9]/.test(passwordValue)) {
+                        globalError.textContent = 'Password must contain at least one letter and one number.';
+                        globalError.classList.remove('hidden');
+                        showPopup('error', 'Password must contain at least one letter and one number.');
+                        return false;
+                    }
+
+                    if (passwordValue !== confirmValue) {
+                        globalError.textContent = 'Password and confirm password do not match.';
+                        globalError.classList.remove('hidden');
+                        showPopup('error', 'Password and confirm password do not match.');
+                        return false;
+                    }
+                }
+
                 if (step === 3) {
                     const subjectChecks = form.querySelectorAll('input[name="subjects[]"]:checked');
                     if (subjectChecks.length === 0) {
                         globalError.textContent = 'Please select at least one subject before submitting.';
                         globalError.classList.remove('hidden');
+                        showPopup('error', 'Please select at least one subject before submitting.');
                         return false;
                     }
 
@@ -572,6 +764,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!langSelection) {
                         globalError.textContent = 'Please choose your preferred exam language.';
                         globalError.classList.remove('hidden');
+                        showPopup('error', 'Please choose your preferred exam language.');
+                        return false;
+                    }
+
+                    const dobField = document.getElementById('dob');
+                    if (dobField && dobField.value) {
+                        const dob = new Date(dobField.value + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (dob > today) {
+                            globalError.textContent = 'Date of birth cannot be in the future.';
+                            globalError.classList.remove('hidden');
+                            showPopup('error', 'Date of birth cannot be in the future.');
+                            return false;
+                        }
+                        const age = today.getFullYear() - dob.getFullYear() - ((today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) ? 1 : 0);
+                        if (age < 12) {
+                            globalError.textContent = 'Minimum age for registration is 12 years.';
+                            globalError.classList.remove('hidden');
+                            showPopup('error', 'Minimum age for registration is 12 years.');
+                            return false;
+                        }
+                    }
+
+                    const rollField = document.getElementById('rollNumber');
+                    if (rollField && !/^[a-zA-Z0-9\/\-_]{4,80}$/.test(rollField.value.trim())) {
+                        globalError.textContent = 'Roll number format is invalid.';
+                        globalError.classList.remove('hidden');
+                        showPopup('error', 'Roll number format is invalid.');
                         return false;
                     }
                 }
@@ -618,16 +839,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             : (data.message || 'Registration failed.');
                         globalError.textContent = errorText;
                         globalError.classList.remove('hidden');
+                        showPopup('error', errorText);
                         return;
                     }
 
                     globalSuccess.textContent = data.message || 'Registration completed successfully.';
                     globalSuccess.classList.remove('hidden');
+                    showPopup('success', data.message || 'Registration completed successfully.');
                     form.reset();
                     showStep(1);
+                    setTimeout(() => {
+                        window.location.href = 'login.php?registered=1';
+                    }, 1200);
                 } catch (err) {
                     globalError.textContent = 'Unable to submit form. Please try again.';
                     globalError.classList.remove('hidden');
+                    showPopup('error', 'Unable to submit form. Please try again.');
                 }
              });
 

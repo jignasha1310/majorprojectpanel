@@ -5,6 +5,7 @@ $error = '';
 $success = '';
 $prefillEmail = '';
 $rememberChecked = false;
+$redirectTo = '';
 $authFlash = (string) ($_SESSION['auth_flash'] ?? '');
 if ($authFlash !== '') {
     unset($_SESSION['auth_flash']);
@@ -60,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please select a valid role.';
     } elseif (empty($email) || empty($password)) {
         $error = 'Please fill in all fields.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Please enter a valid email address.';
+    } elseif (strlen($password) < 6) {
+        $error = 'Password must be at least 6 characters.';
     } else {
         $config = $roleConfig[$role];
         $sql = sprintf('SELECT id, name, email, password FROM %s WHERE email = ? LIMIT 1', $config['table']);
@@ -91,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setcookie('remember_student_email', '', time() - 3600, '/');
                 }
 
-                header('Location: ' . $config['redirect']);
-                exit;
+                $success = 'Login successful. Redirecting...';
+                $redirectTo = $config['redirect'];
             }
 
             $stmt->close();
@@ -280,6 +285,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_em
             font-weight: 600;
         }
         .back-home:hover { color: #3730a3; }
+        .popup {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            min-width: 260px;
+            max-width: 420px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .popup.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .popup.success { background: #059669; }
+        .popup.error { background: #dc2626; }
 
         @media (max-width: 900px) {
             .login-container {
@@ -302,6 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_em
     </style>
 </head>
 <body>
+    <div id="popupMessage" class="popup" role="alert" aria-live="polite"></div>
     <div class="login-container">
         <div class="login-header">
             <div class="logo">
@@ -324,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_em
             <div class="alert alert-success"><i class="fas fa-check-circle"></i> Registration successful! Please login.</div>
         <?php endif; ?>
 
-        <form method="POST" action="">
+        <form id="loginForm" method="POST" action="">
             <input type="hidden" name="role" value="student">
             <div class="form-group">
                 <label for="email">Email Address</label>
@@ -357,5 +387,61 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_COOKIE['remember_student_em
             <a href="../index.html" class="back-home"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
     </div>
+    <script>
+        (function () {
+            const popup = document.getElementById('popupMessage');
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            let timerId;
+
+            function showPopup(type, message) {
+                if (!popup || !message) return;
+                popup.className = `popup ${type}`;
+                popup.textContent = message;
+                popup.classList.add('show');
+                if (timerId) clearTimeout(timerId);
+                timerId = setTimeout(() => popup.classList.remove('show'), 2600);
+            }
+
+            <?php if ($error): ?>
+            showPopup('error', <?= json_encode($error) ?>);
+            <?php endif; ?>
+
+            <?php if ($authFlash !== ''): ?>
+            showPopup('error', <?= json_encode($authFlash) ?>);
+            <?php endif; ?>
+
+            <?php if (isset($_GET['registered'])): ?>
+            showPopup('success', 'Registration successful. Please login.');
+            <?php endif; ?>
+
+            <?php if ($success): ?>
+            showPopup('success', <?= json_encode($success) ?>);
+            setTimeout(() => {
+                window.location.href = <?= json_encode($redirectTo) ?>;
+            }, 900);
+            <?php endif; ?>
+
+            form.addEventListener('submit', (event) => {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!emailRegex.test(email)) {
+                    event.preventDefault();
+                    showPopup('error', 'Please enter a valid email address.');
+                    emailInput.focus();
+                    return;
+                }
+
+                if (password.length < 6) {
+                    event.preventDefault();
+                    showPopup('error', 'Password must be at least 6 characters.');
+                    passwordInput.focus();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
